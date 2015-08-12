@@ -2,8 +2,7 @@ package com.jfinalshop.controller.shop;
 
 import java.util.List;
 
-import com.jfinal.aop.ClearInterceptor;
-import com.jfinal.aop.ClearLayer;
+import com.jfinal.aop.Clear;
 import com.jfinal.ext.route.ControllerBind;
 import com.jfinal.kit.StrKit;
 import com.jfinal.plugin.activerecord.Db;
@@ -30,7 +29,7 @@ public class FavoriteController extends BaseShopController<Product>{
 	}
 
 	// 添加收藏商品
-	@ClearInterceptor(ClearLayer.ALL)
+	@Clear
 	public void ajaxAdd() {
 		id = getPara("id","");		
 		if(StrKit.isBlank(id)){

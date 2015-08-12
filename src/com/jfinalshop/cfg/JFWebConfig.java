@@ -13,7 +13,6 @@ import com.jfinal.ext.plugin.shiro.ShiroPlugin;
 import com.jfinal.ext.plugin.tablebind.AutoTableBindPlugin;
 import com.jfinal.ext.plugin.tablebind.SimpleNameStyles;
 import com.jfinal.ext.route.AutoBindRoutes;
-import com.jfinal.i18n.I18N;
 import com.jfinal.plugin.activerecord.ActiveRecordPlugin;
 import com.jfinal.plugin.activerecord.dialect.MysqlDialect;
 import com.jfinal.plugin.druid.DruidPlugin;
@@ -40,8 +39,6 @@ public class JFWebConfig extends JFinalConfig{
 		me.setMainRenderFactory(new BeetlRenderFactory());
 		// 设定为开发者模式
 		me.setDevMode(true);
-		// 国际化
-		I18N.init("i18n", null, null);
 	}
 
 	@Override

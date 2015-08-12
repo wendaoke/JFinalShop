@@ -1,7 +1,7 @@
 package com.jfinalshop.interceptor;
 
 import com.jfinal.aop.Interceptor;
-import com.jfinal.core.ActionInvocation;
+import com.jfinal.aop.Invocation;
 import com.jfinal.core.Controller;
 import com.jfinal.kit.StrKit;
 import com.jfinalshop.model.Footer;
@@ -13,7 +13,7 @@ import com.jfinalshop.util.SystemConfigUtil;
 public class NavigationInterceptor implements Interceptor{
 
 	@Override
-	public void intercept(ActionInvocation ai) {
+	public void intercept(Invocation ai) {
 		Controller c = ai.getController();
 		c.setAttr("systemConfig", SystemConfigUtil.getSystemConfig());
 		c.setAttr("base", c.getRequest().getContextPath());

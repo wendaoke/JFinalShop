@@ -15,8 +15,7 @@ import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 
 import com.jfinal.aop.Before;
-import com.jfinal.aop.ClearInterceptor;
-import com.jfinal.aop.ClearLayer;
+import com.jfinal.aop.Clear;
 import com.jfinal.ext.plugin.shiro.ShiroMethod;
 import com.jfinal.kit.StrKit;
 import com.jfinal.plugin.activerecord.tx.Tx;
@@ -42,7 +41,7 @@ public class AdminController extends BaseAdminController<Admin>{
 	private Admin admin;
 	
 	// 登录页面
-	@ClearInterceptor(ClearLayer.ALL)
+	@Clear
 	public void login(){
 		SystemConfig systemConfig = SystemConfigUtil.getSystemConfig();
 		setAttr("systemConfig", systemConfig);
@@ -51,7 +50,7 @@ public class AdminController extends BaseAdminController<Admin>{
 	}
 		
 	// 登录验证
-	@ClearInterceptor(ClearLayer.ALL)
+	@Clear
 	public void loginVerify() {
 		String captchaId = getPara("j_captcha","");
 		String password = getPara("j_password","");

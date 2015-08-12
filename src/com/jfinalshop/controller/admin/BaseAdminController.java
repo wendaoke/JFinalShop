@@ -7,8 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.jfinal.aop.Before;
-import com.jfinal.aop.ClearInterceptor;
-import com.jfinal.aop.ClearLayer;
+import com.jfinal.aop.Clear;
 import com.jfinal.core.Controller;
 import com.jfinal.kit.StrKit;
 import com.jfinal.plugin.activerecord.Db;
@@ -145,7 +144,7 @@ public class BaseAdminController <M extends Model<M>> extends Controller {
 		render("/admin/success.html");
 	}
 	
-	@ClearInterceptor(ClearLayer.ALL)
+	@Clear
 	public void renderErrorMessage(String message) {
 		setAttr("errorMessages", message);
 		setAttr("systemConfig", SystemConfigUtil.getSystemConfig());

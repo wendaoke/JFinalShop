@@ -5,7 +5,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import com.jfinal.aop.Interceptor;
-import com.jfinal.core.ActionInvocation;
+import com.jfinal.aop.Invocation;
 import com.jfinal.core.Controller;
 import com.jfinal.ext.plugin.shiro.ShiroMethod;
 import com.jfinalshop.bean.SystemConfig;
@@ -15,7 +15,7 @@ import com.jfinalshop.security.ShiroUtils;
 import com.jfinalshop.util.SystemConfigUtil;
 
 public class AdminInterceptor implements Interceptor {
-	public void intercept(ActionInvocation ai) {
+	public void intercept(Invocation ai) {
 		Controller controller = ai.getController();
 		SystemConfig systemConfig = SystemConfigUtil.getSystemConfig();
 		controller.setAttr("systemConfig", systemConfig);

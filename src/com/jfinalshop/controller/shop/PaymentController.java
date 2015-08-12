@@ -274,7 +274,7 @@ public class PaymentController extends BaseShopController<Payment>{
 			Payment payment = new Payment();
 			payment.set("paymentType",paymentType.ordinal());
 			payment.set("paymentConfigName",paymentConfig.getStr("name"));
-			payment.set("bankName",getText("PaymentConfigType.tenpay"));
+			//payment.set("bankName",getText("PaymentConfigType.tenpay"));
 			payment.set("bankAccount",tenpayConfig.getBargainorId());
 			payment.set("totalAmount",totalAmount);
 			payment.set("paymentFee",paymentFee);

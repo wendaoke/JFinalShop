@@ -8,8 +8,7 @@ import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
 import com.jfinal.aop.Before;
-import com.jfinal.aop.ClearInterceptor;
-import com.jfinal.aop.ClearLayer;
+import com.jfinal.aop.Clear;
 import com.jfinal.kit.StrKit;
 import com.jfinalshop.model.Area;
 import com.jfinalshop.validator.admin.AreaValidator;
@@ -127,7 +126,7 @@ public class AreaController extends BaseAdminController<Area>{
 	}
 		
 	// 根据地区Path值获取下级地区JSON数据
-	@ClearInterceptor(ClearLayer.ALL)
+	@Clear
 	public void ajaxChildrenArea() {
 		String path = getPara("path","");
 		if (StringUtils.contains(path,  Area.PATH_SEPARATOR)) {
