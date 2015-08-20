@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `admin` (
 -- 正在导出表  jfinalshop.admin 的数据：~1 rows (大约)
 /*!40000 ALTER TABLE `admin` DISABLE KEYS */;
 INSERT INTO `admin` (`id`, `createDate`, `modifyDate`, `department`, `email`, `isAccountEnabled`, `isAccountExpired`, `isAccountLocked`, `isCredentialsExpired`, `lockedDate`, `loginDate`, `loginFailureCount`, `loginIp`, `name`, `password`, `username`) VALUES
-	('8a8a05d94739522101473956e6c90002', '2014-12-29 11:27:01', '2015-01-10 16:29:05', '技术部', 'admin@163.com', b'1', b'0', b'0', b'0', '2014-12-29 11:35:13', '2015-01-10 16:29:05', 0, '0:0:0:0:0:0:0:1', '李红元', '7adeaf546b7726c8a40fd4c9c2e96653', 'admin');
+	('8a8a05d94739522101473956e6c90002', '2014-12-29 11:27:01', '2015-01-10 16:29:05', '技术部', 'admin@163.com', b'1', b'0', b'0', b'0', '2014-12-29 11:35:13', '2015-01-10 16:29:05', 0, '0:0:0:0:0:0:0:1', '李红元', 'e10adc3949ba59abbe56e057f20f883e', 'admin');
 /*!40000 ALTER TABLE `admin` ENABLE KEYS */;
 
 
