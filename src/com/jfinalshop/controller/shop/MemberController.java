@@ -14,6 +14,8 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
+import cn.dreampie.shiro.core.SubjectKit;
+
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.jfinal.aop.Before;
@@ -22,7 +24,6 @@ import com.jfinal.ext.route.ControllerBind;
 import com.jfinal.plugin.activerecord.tx.Tx;
 import com.jfinalshop.bean.CartItemCookie;
 import com.jfinalshop.bean.SystemConfig;
-import com.jfinalshop.ext.captcha.CaptchaRender;
 import com.jfinalshop.interceptor.NavigationInterceptor;
 import com.jfinalshop.model.Agreement;
 import com.jfinalshop.model.CartItem;
@@ -57,19 +58,13 @@ public class MemberController extends Controller{
 	// 登录验证
 	
 	@Before({MemberValidator.class,Tx.class})	
-	public void login() {
-		String captchaId = getPara("j_captcha","");
+	public void login() {		
 		String username = getPara("member.username","");
 		String password = getPara("member.password","");
+		String captchaToken = getPara("captchaToken","");
 		
-		Object objMd5RandomCode = this.getSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		String md5RandomCode = null;
-		if (objMd5RandomCode != null) {
-			md5RandomCode = objMd5RandomCode.toString();
-			this.removeSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		}		
-		if (StringUtils.isEmpty(md5RandomCode) || StringUtils.isEmpty(captchaId) || !CaptchaRender.validate(md5RandomCode, captchaId)) {
-			addActionError("验证码输入错误!");
+		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+			addActionError("验证码错误!!!");
 			return;
 		}
 		
@@ -192,20 +187,15 @@ public class MemberController extends Controller{
 	// Ajax会员登录验证
 	@Before({MemberValidator.class,Tx.class})
 	public void ajaxLogin() {
-		String captchaId = getPara("j_captcha","");
 		String username = getPara("member.username","");
 		String password = getPara("member.password","");
+		String captchaToken = getPara("captchaToken","");
 		
-		Object objMd5RandomCode = this.getSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		String md5RandomCode = null;
-		if (objMd5RandomCode != null) {
-			md5RandomCode = objMd5RandomCode.toString();
-			this.removeSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		}		
-		if (StringUtils.isEmpty(md5RandomCode) || StringUtils.isEmpty(captchaId) || !CaptchaRender.validate(md5RandomCode, captchaId)) {
-			ajaxJsonErrorMessage("验证码输入错误!");
+		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+			addActionError("验证码错误!");
 			return;
 		}
+		
 		SystemConfig systemConfig = getSystemConfig();
 		Member loginMember = Member.dao.getMemberByUsername(username);
 		if (loginMember != null) {
@@ -324,7 +314,7 @@ public class MemberController extends Controller{
 	public void ajaxRegister() {
 		isAgreeAgreement = getParaToBoolean("isAgreeAgreement");
 		member = getModel(Member.class);
-		String captchaId = getPara("j_captcha","");		
+		String captchaToken = getPara("captchaToken","");
 		String rePassword = getPara("rePassword","");
 		
 		if (isAgreeAgreement == null || isAgreeAgreement == false) {
@@ -340,14 +330,8 @@ public class MemberController extends Controller{
 			return;
 		}
 		
-		Object objMd5RandomCode = this.getSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		String md5RandomCode = null;
-		if (objMd5RandomCode != null) {
-			md5RandomCode = objMd5RandomCode.toString();
-			this.removeSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		}		
-		if (StringUtils.isEmpty(md5RandomCode) || StringUtils.isEmpty(captchaId) || !CaptchaRender.validate(md5RandomCode, captchaId)) {
-			ajaxJsonErrorMessage("验证码输入错误!");
+		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+			ajaxJsonErrorMessage("验证码错误!");
 			return;
 		}
 		

@@ -66,25 +66,25 @@
 
     <form id="loginForm" class="am-form data-am-validator" action="${base}/admin/loginVerify" method="post">
       <label for="email">用户名:</label>
-      <input type="text" id="username" name="j_username" placeholder="输入用户名" required />
+      <input type="text" id="username" name="username" placeholder="输入用户名" required />
       <br>
       <label for="password">密&nbsp;&nbsp;&nbsp;码:</label>
-      <input type="password" id="password" name="j_password"  placeholder="输入密码" required />
+      <input type="password" id="password" name="password"  placeholder="输入密码" required />
       <br>
       
       <label for="email">验证码:</label>
       <div class="am-g am-g-fixed">
 		  <div class="am-u-sm-4">
-		  	 <input type="text" id="captcha" name="j_captcha" placeholder="验证码" required/>
+		  	 <input type="text" id="captcha" name="captchaToken" placeholder="验证码" required/>
 		  </div>
 		  <div class="am-u-sm-8">
-		  	<img id="captchaImage" src="${base}/randPic" alt="换一张" />
+		  	<img id="captchaImage" src="${base}/captcha" alt="换一张" />
 		  </div>
 	  </div>
       <br>
       
       <label for="remember-me">
-        <input id="remember-me" type="checkbox"> 记住密码
+        <input id="remember-me" type="checkbox" name="remember"> 记住密码
       </label>
       <br />
       

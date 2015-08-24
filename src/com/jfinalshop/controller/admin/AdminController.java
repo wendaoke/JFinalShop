@@ -14,13 +14,14 @@ import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.authz.annotation.RequiresRoles;
 import org.apache.shiro.subject.Subject;
 
+import cn.dreampie.shiro.core.SubjectKit;
+
 import com.jfinal.aop.Before;
 import com.jfinal.aop.Clear;
 import com.jfinal.ext.plugin.shiro.ShiroMethod;
 import com.jfinal.kit.StrKit;
 import com.jfinal.plugin.activerecord.tx.Tx;
 import com.jfinalshop.bean.SystemConfig;
-import com.jfinalshop.ext.captcha.CaptchaRender;
 import com.jfinalshop.model.Admin;
 import com.jfinalshop.model.AdminRole;
 import com.jfinalshop.model.Article;
@@ -52,31 +53,26 @@ public class AdminController extends BaseAdminController<Admin>{
 	// 登录验证
 	@Clear
 	public void loginVerify() {
-		String captchaId = getPara("j_captcha","");
-		String password = getPara("j_password","");
-		String username = getPara("j_username","");
-		boolean isSaveUsername = getPara("j_isSaveUsername","").equals("on") ? true : false;
+		String username = getPara("username","");
+		String password = getPara("password","");		
+		String captchaToken = getPara("captchaToken");
+		boolean rememberMe = getPara("remember","").equals("on") ? true : false;
 		
-		Object objMd5RandomCode = this.getSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		String md5RandomCode = null;
-		if (objMd5RandomCode != null) {
-			md5RandomCode = objMd5RandomCode.toString();
-			this.removeSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY);
-		}
-		if(StringUtils.isEmpty(md5RandomCode) || StringUtils.isEmpty(captchaId) ||!CaptchaRender.validate(md5RandomCode, captchaId)){	
-			renderErrorMessage("验证码错误!");
-			return;
-		}		
 		if(StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
 			renderErrorMessage("账号或密码不能为空!");
 			return;
 		}
-			
+		
+		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+			renderErrorMessage("验证码错误!");
+			return;
+		}
+		
 		Admin admin = Admin.dao.getAdminByUsername(username);			
 		// 开始验证
 		Subject subject = SecurityUtils.getSubject();
 		UsernamePasswordToken token = new UsernamePasswordToken(username, DigestUtils.md5Hex(password));
-		token.setRememberMe(isSaveUsername);
+		token.setRememberMe(rememberMe);
 		
 		try {
 			subject.login(token);

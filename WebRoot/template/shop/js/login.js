@@ -24,7 +24,7 @@ $().ready( function() {
 	});
 	
 	// 登录窗口
-	var loginWindowHtml = '<div id="loginWindow" class="loginWindow"><div class="windowTop"><div class="windowTitle">会员登录</div><a class="windowClose loginWindowClose" href="#" hidefocus="true"></a></div><div class="windowMiddle"><form id="loginWindowForm" action="' + JFinalshop.base + '/shop/member/ajaxLogin" method="post"><table><tr><th>用户名: </th><td><input type="text" name="member.username" class="formText {required: true, messages: {required: \'请填写用户名!\'}}" /></td></tr><tr><th>密&nbsp;&nbsp;&nbsp;码: </th><td><input type="password" name="member.password" class="formText {required: true, messages: {required: \'请填写密码!\'}}" /></td></tr><tr><th>验证码: </th><td><input type="text" id="loginWindowCaptcha" name="j_captcha" class="formTextS {required: true, messages: {required: \'请填写验证码!\'}}" /><img id="loginWindowCaptchaImage" src="" alt="换一张" /></td></tr><tr><th>&nbsp;</th><td><span class="warnIcon">&nbsp;</span><a href="' + JFinalshop.base + '/shop/member/passwordRecover">忘记了密码? 点击找回!</a></td></tr><tr><th>&nbsp;</th><td><input type="submit" id="loginWindowSubmit" class="loginSubmit" value="登 录" hidefocus="true" /></td></tr></table></form></div><div class="windowBottom"></div></div>';
+	var loginWindowHtml = '<div id="loginWindow" class="loginWindow"><div class="windowTop"><div class="windowTitle">会员登录</div><a class="windowClose loginWindowClose" href="#" hidefocus="true"></a></div><div class="windowMiddle"><form id="loginWindowForm" action="' + JFinalshop.base + '/shop/member/ajaxLogin" method="post"><table><tr><th>用户名: </th><td><input type="text" name="member.username" class="formText {required: true, messages: {required: \'请填写用户名!\'}}" /></td></tr><tr><th>密&nbsp;&nbsp;&nbsp;码: </th><td><input type="password" name="member.password" class="formText {required: true, messages: {required: \'请填写密码!\'}}" /></td></tr><tr><th>验证码: </th><td><input type="text" id="loginWindowCaptcha" name="captchaToken" class="formTextS {required: true, messages: {required: \'请填写验证码!\'}}" /><img id="loginWindowCaptchaImage" src="" alt="换一张" /></td></tr><tr><th>&nbsp;</th><td><span class="warnIcon">&nbsp;</span><a href="' + JFinalshop.base + '/shop/member/passwordRecover">忘记了密码? 点击找回!</a></td></tr><tr><th>&nbsp;</th><td><input type="submit" id="loginWindowSubmit" class="loginSubmit" value="登 录" hidefocus="true" /></td></tr></table></form></div><div class="windowBottom"></div></div>';
 
 	$("body").prepend(loginWindowHtml);
 	
@@ -82,7 +82,7 @@ $().ready( function() {
 	
 	// 刷新验证码图片
 	function loginWindowCaptchaImageRefresh() {
-		$("#loginWindowCaptchaImage").attr("src", JFinalshop.base + "/randPic?timestamp=" + (new Date()).valueOf());
+		$("#loginWindowCaptchaImage").attr("src", JFinalshop.base + "/captcha?timestamp=" + (new Date()).valueOf());
 	}
 	
 	// 点击刷新验证码图片
@@ -92,7 +92,7 @@ $().ready( function() {
 	
 	// 刷新验证码图片
 	function loginCaptchaImageRefresh() {
-		$("#loginCaptchaImage").attr("src", JFinalshop.base + "/randPic?timestamp=" + (new Date()).valueOf());
+		$("#loginCaptchaImage").attr("src", JFinalshop.base + "/captcha?timestamp=" + (new Date()).valueOf());
 	}
 	
 	// 点击刷新验证码图片
@@ -111,6 +111,7 @@ $().ready( function() {
 			return false;
 		}
 		if ($("#loginCaptcha").val() == "") {
+			alert($("#loginCaptcha").val());
 			$.message("请输入您的验证码!");
 			return false;
 		}
