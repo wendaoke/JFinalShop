@@ -30,7 +30,7 @@ public class TemplateConfigUtil {
 	public static final String DYNAMIC_CONFIG_LIST_CACHE_KEY = "dynamicConfigList";// 动态模板配置缓存Key
 	public static final String HTML_CONFIG_LIST_CACHE_KEY = "htmlConfigList";// 生成静态模板配置缓存Key
 	public static final String MAIL_CONFIG_LIST_CACHE_KEY = "mailConfigList";// 邮件模板配置缓存Key
-	public static final String TEMPLATE_ABSOLUTE_PATH = "/WEB-INF/template";// 模板物理路径
+	public static final String TEMPLATE_ABSOLUTE_PATH = "/WEB-INF/views";// 模板物理路径
 	
 	/**
 	 * 获取动态模板配置
@@ -48,7 +48,7 @@ public class TemplateConfigUtil {
 		File configFile = null;
 		Document document = null;
 		try {
-			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/template/" + CONFIG_FILE_NAME;
+			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/views/" + CONFIG_FILE_NAME;
 			configFile = new File(configFilePath);
 			SAXReader saxReader = new SAXReader();
 			document = saxReader.read(configFile);
@@ -80,7 +80,7 @@ public class TemplateConfigUtil {
 	public static DynamicConfig getDynamicConfig(String name) {
 		Document document = null;
 		try {
-			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/template/" + CONFIG_FILE_NAME;
+			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/views/" + CONFIG_FILE_NAME;
 			File configFile = new File(configFilePath);
 			SAXReader saxReader = new SAXReader();
 			document = saxReader.read(configFile);
@@ -147,7 +147,7 @@ public class TemplateConfigUtil {
 		File configFile = null;
 		Document document = null;
 		try {
-			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/template/" + CONFIG_FILE_NAME;
+			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/views/" + CONFIG_FILE_NAME;
 			configFile = new File(configFilePath);
 			SAXReader saxReader = new SAXReader();
 			document = saxReader.read(configFile);
@@ -181,7 +181,7 @@ public class TemplateConfigUtil {
 	public static HtmlConfig getHtmlConfig(String name) {
 		Document document = null;
 		try {
-			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/template/" + CONFIG_FILE_NAME;
+			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/views/" + CONFIG_FILE_NAME;
 			File configFile = new File(configFilePath);
 			SAXReader saxReader = new SAXReader();
 			document = saxReader.read(configFile);
@@ -249,7 +249,7 @@ public class TemplateConfigUtil {
 		List<MailConfig> mailConfigList;
 		Document document = null;
 		try {
-			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/template/" + CONFIG_FILE_NAME;
+			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/views/" + CONFIG_FILE_NAME;
 			File configFile = new File(configFilePath);
 			SAXReader saxReader = new SAXReader();
 			document = saxReader.read(configFile);
@@ -283,7 +283,7 @@ public class TemplateConfigUtil {
 	public static MailConfig getMailConfig(String name) {
 		Document document = null;
 		try {
-			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/template/" + CONFIG_FILE_NAME;
+			String configFilePath = new File(Thread.currentThread().getContextClassLoader().getResource("").toURI().getPath()).getParent() + "/views/" + CONFIG_FILE_NAME;
 			File configFile = new File(configFilePath);
 			SAXReader saxReader = new SAXReader();
 			document = saxReader.read(configFile);
