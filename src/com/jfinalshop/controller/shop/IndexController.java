@@ -19,13 +19,6 @@ public class IndexController extends Controller{
 		redirect("/index.html");
 	}
 	
-	// 验证码
-	/*public void randPic() {
-		CaptchaRender img = new CaptchaRender(4); 
-		this.setSessionAttr(CaptchaRender.DEFAULT_CAPTCHA_MD5_CODE_KEY, img.getMd5RandonCode());
-		render(img);
-	}*/
-	
 	/**
 	 * 验证码
 	 */

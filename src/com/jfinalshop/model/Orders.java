@@ -11,6 +11,7 @@ import com.jfinalshop.model.Product.WeightUnit;
  * 实体类 - 订单
  * 
  */
+
 public class Orders extends Model<Orders> {
 
 	private static final long serialVersionUID = 2186711390821790352L;
