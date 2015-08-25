@@ -2,7 +2,6 @@ package com.jfinalshop.cfg;
 
 import org.beetl.ext.jfinal.BeetlRenderFactory;
 
-import com.alibaba.druid.filter.config.ConfigTools;
 import com.jfinal.config.Constants;
 import com.jfinal.config.Handlers;
 import com.jfinal.config.Interceptors;
@@ -52,7 +51,7 @@ public class JFWebConfig extends JFinalConfig{
 		// mysql
 		String url = getProperty("jdbcUrl");
 		String username = getProperty("user");
-		String password = Decrypt(getProperty("password"));
+		String password = getProperty("password");
 		String driverClass = getProperty("driverClass");
 		String filters = getProperty("filters");
 		
@@ -83,14 +82,4 @@ public class JFWebConfig extends JFinalConfig{
 		SerialNumberUtil.lastSnNumberInit();	
 	}
 	
-	
-	public String Decrypt(String pwd) {
-		String password = null;
-		try {
-			password = ConfigTools.decrypt(pwd);// 解密
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return password;
-	}
 }
