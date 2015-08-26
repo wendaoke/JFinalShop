@@ -100,7 +100,7 @@ $().ready( function() {
 	
 	// 刷新验证码图片
 	function registerWindowCaptchaImageRefresh() {
-		$("#registerWindowCaptchaImage").attr("src", JFinalshop.base + "/captcha?timestamp=" + (new Date()).valueOf());
+		$("#registerWindowCaptchaImage").attr("src", JFinalshop.base + "/captcha?timestamp=" + (new Date()).valueOf() + "&width=100&height=45&fontsize=35");
 	}
 	
 	// 点击刷新验证码图片

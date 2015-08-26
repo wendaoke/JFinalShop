@@ -35,7 +35,7 @@
 			if(imageSrc.indexOf("?") >= 0) {
 				imageSrc = imageSrc.substring(0, imageSrc.indexOf("?"));
 			}
-			imageSrc = imageSrc + "?timestamp=" + timestamp;
+			imageSrc = imageSrc + "?timestamp=" + timestamp + "&width=100&height=45&fontsize=35";
 			$captchaImage.attr("src", imageSrc);
 		});
 			
@@ -68,7 +68,7 @@
 		  	 <input type="text" id="captcha" name="captchaToken" placeholder="验证码" required/>
 		  </div>
 		  <div class="am-u-sm-8">
-		  	<img id="captchaImage" src="${base}/captcha" alt="换一张" />
+		  	<img id="captchaImage" src="${base}/captcha?width=100&height=45&fontsize=35" alt="换一张" />
 		  </div>
 	  </div>
       <br>
