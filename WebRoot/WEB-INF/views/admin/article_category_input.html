@@ -57,7 +57,7 @@
 	          <input type="hidden" name="articleCategory.id" value="${articleCategory.id!}" />
 	          
 	          <div class="am-g am-margin-top">
-	            <div class="am-u-sm-4 am-u-md-2 am-text-right">分类名称</div>
+	            <div class="am-u-sm-4 am-u-md-1 am-text-right">分类名称</div>
 	            <div class="am-u-sm-8 am-u-md-4">
 	              <input type="text" name="articleCategory.name" class="am-input-sm" value="${articleCategory.name!}" required/>
 	            </div>
@@ -65,7 +65,7 @@
 	          </div>
 	          
 	          <div class="am-g am-margin-top">
-	            <div class="am-u-sm-4 am-u-md-2 am-text-right">上级分类</div>
+	            <div class="am-u-sm-4 am-u-md-1 am-text-right">上级分类</div>
 	            <div class="am-u-sm-8 am-u-md-4">
 	              <%if(isAdd){%>
 						<select name="articleCategory.parent_id" data-am-selected="{btnSize: 'sm', btnStyle: 'secondary'}" >
@@ -86,7 +86,7 @@
 	          </div>
 	          
 	          <div class="am-g am-margin-top">
-	            <div class="am-u-sm-4 am-u-md-2 am-text-right">排序</div>
+	            <div class="am-u-sm-4 am-u-md-1 am-text-right">排序</div>
 	            <div class="am-u-sm-8 am-u-md-4">
 	              <input type="text" name="articleCategory.orderList" class="am-input-sm" value="${articleCategory.orderList!50}" title="只允许输入零或正整数" required/>
 	            </div>
@@ -94,7 +94,7 @@
 	          </div>
 	          
 	          <div class="am-g am-margin-top">
-	            <div class="am-u-sm-4 am-u-md-2 am-text-right">页面关键词</div>
+	            <div class="am-u-sm-4 am-u-md-1 am-text-right">页面关键词</div>
 	            <div class="am-u-sm-8 am-u-md-4">
 	              <input type="text" name="articleCategory.metaKeywords" class="am-input-sm" value="${articleCategory.metaKeywords!}" />
 	            </div>
@@ -102,7 +102,7 @@
 	          </div>
 	          
 	          <div class="am-g am-margin-top">
-	            <div class="am-u-sm-4 am-u-md-2 am-text-right">页面描述</div>
+	            <div class="am-u-sm-4 am-u-md-1 am-text-right">页面描述</div>
 	            <div class="am-u-sm-8 am-u-md-4">
 	              <textarea name="articleCategory.metaDescription" rows="7">${articleCategory.metaDescription!}</textarea>
 	            </div>
@@ -110,8 +110,8 @@
 	          </div>
 	          
 			  <div class="am-g am-margin-top">
-			  <div class="am-u-sm-12 am-u-md-2 am-text-right admin-form-text"></div>
-			  <div class="am-u-sm-12 am-u-md-10">
+			  <div class="am-u-sm-12 am-u-md-1 am-text-right admin-form-text"></div>
+			  <div class="am-u-sm-12 am-u-md-11">
 			  	<button type="submit" class="am-btn am-btn-primary am-btn-xs">提交保存</button>
 			    <button type="button" class="am-btn am-btn-warning am-btn-xs" onclick="window.history.back(); return false;">放弃保存</button>
 			  </div>
