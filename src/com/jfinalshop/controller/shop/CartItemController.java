@@ -81,7 +81,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 				for (CartItem cartItem : cartItemList) {
 					totalQuantity += cartItem.getInt("quantity");
 					if (getSystemConfig().getPointType() == PointType.productSet) {
-						totalPoint = cartItem.getProduct().getInt("Point") * cartItem.getInt("quantity") + totalPoint;
+						totalPoint = cartItem.getProduct().getInt("point") * cartItem.getInt("quantity") + totalPoint;
 					}
 					totalPrice = cartItem.getProduct().getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(cartItem.getInt("quantity").toString())).add(totalPrice);
 				}
