@@ -10,6 +10,7 @@ import com.jfinal.aop.Before;
 import com.jfinal.kit.StrKit;
 import com.jfinalshop.bean.AlipayConfig;
 import com.jfinalshop.bean.AlipayConfig.AlipayType;
+import com.jfinalshop.bean.PaypalConfig;
 import com.jfinalshop.bean.TenpayConfig;
 import com.jfinalshop.bean.TenpayConfig.TenpayType;
 import com.jfinalshop.model.PaymentConfig;
@@ -26,6 +27,7 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 	private PaymentConfig paymentConfig;
 	private TenpayConfig tenpayConfig;
 	private AlipayConfig alipayConfig;
+	private PaypalConfig paypalConfig;
 	
 	// 列表
 	public void list() {
@@ -62,6 +64,8 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 				setAttr("tenpayConfig", paymentConfig.getConfigObject());
 			}else if(paymentConfig.getPaymentConfigType() == PaymentConfigType.alipay) {
 				setAttr("alipayConfig", paymentConfig.getConfigObject());
+			}else if(paymentConfig.getPaymentConfigType() == PaymentConfigType.paypal) {
+				setAttr("paypalConfig", paymentConfig.getConfigObject());
 			}
 		}		
 		setAttr("allPaymentConfigType", getAllPaymentConfigType());
@@ -78,8 +82,10 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 		paymentConfig = getModel(PaymentConfig.class);
 		tenpayConfig = getModel(TenpayConfig.class);	
 		alipayConfig = getModel(AlipayConfig.class);
+		paypalConfig = getModel(PaypalConfig.class);
 		String alipayType = getPara("alipayType","");
 		String tenpayType = getPara("tenpayType","");
+		String paypalType = getPara("paypalType","");
 		
 		if (StrKit.notBlank(tenpayType)){
 			tenpayConfig.setTenpayType(tenpayType);
@@ -87,7 +93,7 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 		if (StrKit.notBlank(alipayType)){
 			alipayConfig.setAlipayType(alipayType);
 		}	
-		
+
 		String paymentFeeType = getPara("paymentFeeType","");
 		if (StrKit.notBlank(paymentFeeType)){
 			paymentConfig.setPaymentFeeType(paymentFeeType);
@@ -136,6 +142,28 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 				return;
 			}
 			paymentConfig.setConfigObject(alipayConfig);
+		} else if (paymentConfig.getPaymentConfigType() == PaymentConfigType.paypal) {
+			if (paypalConfig == null) {
+				addActionError("贝宝配置不允许为空！");
+				return;
+			}
+			if (paypalConfig.getAccessSite() == null) {
+				addActionError("贝宝访问地址不允许为空！");
+				return;
+			}
+			if (StringUtils.isEmpty(paypalConfig.getBargainorId())) {
+				addActionError("贝宝商户号不允许为空！");
+				return;
+			}
+			if (StringUtils.isEmpty(paypalConfig.getKey())) {
+				addActionError("贝宝密钥不允许为空！");
+				return;
+			}	
+			if (StringUtils.isEmpty(paypalConfig.getSign())) {
+				addActionError("贝宝签名不允许为空！");
+				return;
+			}
+			paymentConfig.setConfigObject(paypalConfig);
 		}
 		saved(paymentConfig);
 		redirect("/paymentConfig/list");
@@ -146,7 +174,7 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 	public void update(){
 		paymentConfig = getModel(PaymentConfig.class);
 		tenpayConfig = getModel(TenpayConfig.class);	
-		
+		paypalConfig = getModel(PaypalConfig.class);
 		String paymentFeeType = getPara("paymentFeeType","");
 		if (StrKit.notBlank(paymentFeeType)){
 			paymentConfig.setPaymentFeeType(paymentFeeType);
@@ -185,6 +213,46 @@ public class PaymentConfigController extends BaseAdminController<PaymentConfig>{
 				return;
 			}
 			paymentConfig.setConfigObject(tenpayConfig);
+		}else if (paymentConfig.getPaymentConfigType() == PaymentConfigType.alipay) {
+			if (alipayConfig == null) {
+				addActionError("支付宝配置不允许为空！");
+				return;
+			}
+			if (alipayConfig.getAlipayType() == null) {
+				addActionError("支付宝交易类型不允许为空！");
+				return;
+			}
+			if (StringUtils.isEmpty(alipayConfig.getBargainorId())) {
+				addActionError("支付宝商户号不允许为空！");
+				return;
+			}
+			if (StringUtils.isEmpty(alipayConfig.getKey())) {
+				addActionError("支付宝密钥不允许为空！");
+				return;
+			}
+			paymentConfig.setConfigObject(alipayConfig);
+		} else if (paymentConfig.getPaymentConfigType() == PaymentConfigType.paypal) {
+			if (paypalConfig == null) {
+				addActionError("贝宝配置不允许为空！");
+				return;
+			}
+			if (paypalConfig.getAccessSite() == null) {
+				addActionError("贝宝访问地址不允许为空！");
+				return;
+			}
+			if (StringUtils.isEmpty(paypalConfig.getBargainorId())) {
+				addActionError("贝宝商户号不允许为空！");
+				return;
+			}
+			if (StringUtils.isEmpty(paypalConfig.getKey())) {
+				addActionError("贝宝密钥不允许为空！");
+				return;
+			}	
+			if (StringUtils.isEmpty(paypalConfig.getSign())) {
+				addActionError("贝宝签名不允许为空！");
+				return;
+			}
+			paymentConfig.setConfigObject(paypalConfig);
 		}
 		updated(paymentConfig);
 		redirect("/paymentConfig/list");

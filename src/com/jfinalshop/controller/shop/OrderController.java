@@ -14,11 +14,13 @@ import com.jfinalshop.bean.SystemConfig.PointType;
 import com.jfinalshop.bean.SystemConfig.StoreFreezeTime;
 import com.jfinalshop.model.Area;
 import com.jfinalshop.model.CartItem;
+import com.jfinalshop.model.CartSpecification;
 import com.jfinalshop.model.DeliveryType;
 import com.jfinalshop.model.DeliveryType.DeliveryMethod;
 import com.jfinalshop.model.OrderItem;
 import com.jfinalshop.model.OrderLog;
 import com.jfinalshop.model.OrderLog.OrderLogType;
+import com.jfinalshop.model.OrderSpecification;
 import com.jfinalshop.model.Orders;
 import com.jfinalshop.model.Orders.OrderStatus;
 import com.jfinalshop.model.Orders.PaymentStatus;
@@ -27,6 +29,7 @@ import com.jfinalshop.model.PaymentConfig;
 import com.jfinalshop.model.Product;
 import com.jfinalshop.model.Product.WeightUnit;
 import com.jfinalshop.model.Receiver;
+import com.jfinalshop.model.SpecificationValue;
 import com.jfinalshop.service.HtmlService;
 import com.jfinalshop.util.ArithUtil;
 import com.jfinalshop.util.CommonUtil;
@@ -91,6 +94,9 @@ public class OrderController extends BaseShopController<Orders>{
 			Product product = cartItem.getProduct();
 			Double weightGram = DeliveryType.toWeightGram(product.getDouble("weight"), product.getWeightUnit());
 			totalWeightGram = ArithUtil.add(totalWeightGram, ArithUtil.mul(weightGram, cartItem.getInt("quantity")));
+			//添加商品规格
+			cartItem.setSpecificationValueList(SpecificationValue.dao.getSpecificationValuesByCartItem(cartItem.getStr("id")));
+			
 		}
 		productTotalPrice = SystemConfigUtil.getOrderScaleBigDecimal(productTotalPrice);
 		if (getSystemConfig().getPointType() == PointType.orderAmount) {
@@ -187,7 +193,6 @@ public class OrderController extends BaseShopController<Orders>{
 			productTotalPrice = cartItem.getProduct().getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(cartItem.getInt("quantity").toString())).add(productTotalPrice);
 			Double weightGram = DeliveryType.toWeightGram(product.getDouble("weight"), product.getWeightUnit());
 			totalWeightGram = ArithUtil.add(totalWeightGram, ArithUtil.mul(weightGram, cartItem.getInt("quantity")));
-			cartItem.delete();
 		}
 		productTotalPrice = SystemConfigUtil.getOrderScaleBigDecimal(productTotalPrice);
 		BigDecimal deliveryFee = deliveryType.getDeliveryFee(totalWeightGram);
@@ -255,7 +260,21 @@ public class OrderController extends BaseShopController<Orders>{
 			orderItem.set("productHtmlFilePath",product.getStr("htmlFilePath"));
 			orderItem.set("order_id",order.getStr("id"));
 			orderItem.set("product_id",product.getStr("id"));
+			orderItem.set("cartitem_id",cartItem.get("id"));
 			orderItem.save(orderItem);
+			
+			List<CartSpecification> cartSpecificationList= CartSpecification.dao.getCartSpecificationListByCart(cartItem.getStr("id"));
+			for(CartSpecification tmp:cartSpecificationList){
+				OrderSpecification orderSpecification = new OrderSpecification();
+				orderSpecification.set("orders", order.getStr("id"));
+				orderSpecification.set("products", tmp.get("products"));
+				orderSpecification.set("specifications", tmp.get("specifications"));
+				orderSpecification.set("specification_values", tmp.get("specification_values"));
+				orderSpecification.set("cartitems", cartItem.get("id"));
+				orderSpecification.save(orderSpecification);
+			}
+			//添加订单规格后，删除购物车的信息
+			cartItem.delete();
 		}
 		
 		// 库存处理

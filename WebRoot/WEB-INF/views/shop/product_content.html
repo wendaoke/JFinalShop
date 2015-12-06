@@ -208,6 +208,21 @@ $().ready( function() {
 						货号: <span>${product.productSn}</span>
                         ${"品牌: <span>" + product.brand.name! + "</span>"}
 					</div>
+					<div class="productSepecification">
+						<%for(entry in specificationList!){
+							var key = entry.key,valuelst = entry.value;
+							%>
+							<span>${key}</span>
+							 <% 
+							  for(list in valuelst!){
+							  %>
+							     <span><input type="radio" class="specification" name="specification_${list.specification.id}" value="${list.specification.id}_${list.id}"  <% if(listLP.first) print('checked'); %> />${list.name}</span>
+							  <%
+							  }
+							 %>
+							 <br/>
+							<%}%>
+					</div>
 					<div class="blank"></div>
 					<div class="productBuy">
 						<div class="buyCount">

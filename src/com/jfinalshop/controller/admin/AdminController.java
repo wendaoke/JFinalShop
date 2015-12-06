@@ -63,10 +63,10 @@ public class AdminController extends BaseAdminController<Admin>{
 			return;
 		}
 		
-		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
-			renderErrorMessage("验证码错误!");
-			return;
-		}
+//		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+//			renderErrorMessage("验证码错误!");
+//			return;
+//		}
 		
 		Admin admin = Admin.dao.getAdminByUsername(username);			
 		// 开始验证

@@ -3,6 +3,7 @@ package com.jfinalshop.util;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -10,10 +11,11 @@ import java.util.UUID;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * 工具类 - 公用
- *
+ * 
  */
 
 public class CommonUtil {
@@ -27,7 +29,7 @@ public class CommonUtil {
 		String uuid = UUID.randomUUID().toString();
 		return uuid.substring(0, 8) + uuid.substring(9, 13) + uuid.substring(14, 18) + uuid.substring(19, 23) + uuid.substring(24);
 	}
-	
+
 	/**
 	 * 随机获取字符串
 	 * 
@@ -40,8 +42,8 @@ public class CommonUtil {
 		if (length <= 0) {
 			return "";
 		}
-		char[] randomChar = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd',
-				'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b', 'n', 'm' };
+		char[] randomChar = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'z', 'x', 'c', 'v', 'b',
+				'n', 'm' };
 		Random random = new Random();
 		StringBuffer stringBuffer = new StringBuffer();
 		for (int i = 0; i < length; i++) {
@@ -78,7 +80,7 @@ public class CommonUtil {
 	 * 
 	 * @param list
 	 *            需要处理的List.
-	 *            
+	 * 
 	 * @param separator
 	 *            分隔符.
 	 * 
@@ -157,7 +159,7 @@ public class CommonUtil {
 	 * @throws InvocationTargetException
 	 * @throws IllegalAccessException
 	 */
-	public static void copyProperties(Object target, Object source){
+	public static void copyProperties(Object target, Object source) {
 		// Validate existence of the specified beans
 		if (target == null) {
 			throw new IllegalArgumentException("No destination bean specified");
@@ -196,4 +198,35 @@ public class CommonUtil {
 		}
 
 	}
+
+	public static String sortString(String str) {
+		if(StringUtils.isBlank(str)){
+			return str;
+		}
+		StringBuffer sb = new StringBuffer();
+		String[] tmp = str.split(",");
+		Arrays.sort(tmp);
+		for (int i = 0; i < tmp.length; i++) {
+			sb.append(tmp[i]).append(",");
+		}
+		return sb.toString();
+	}
+	
+    public static String ArraytoString(Object[] a) {
+        if (a == null)
+            return "null";
+
+        int iMax = a.length - 1;
+        if (iMax == -1)
+            return "()";
+
+        StringBuilder b = new StringBuilder();
+        b.append('(');
+        for (int i = 0; ; i++) {
+            b.append("'").append(String.valueOf(a[i])).append("'");
+            if (i == iMax)
+                return b.append(')').toString();
+            b.append(", ");
+        }
+    }
 }

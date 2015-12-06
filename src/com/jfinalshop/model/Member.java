@@ -1,7 +1,9 @@
 package com.jfinalshop.model;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,6 +13,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Model;
+import com.jfinal.plugin.activerecord.Record;
 import com.jfinalshop.util.CommonUtil;
 
 /**
@@ -158,6 +161,18 @@ public class Member extends Model<Member> {
 	public List<CartItem> getCartItemList() {
 		String sql = "select * from cartitem where member_id = ? order by createDate desc";
 		return CartItem.dao.find(sql,getStr("id"));
+	}
+	
+	public String getCartSpecification(String cartId,String productId){
+		List<String> result = new ArrayList<String>();
+		String sql = " SELECT GROUP_CONCAT(concat_ws('_',specifications,specification_values) SEPARATOR ',') as product_specifications FROM cartitem t1,cart_specification t2 "
+				+ " WHERE t1.product_id = t2.products  AND t1.id = t2.carts and t1.member_id = ? and  t2.carts=? and t1.product_id= ?  group by t2.carts  ";
+		List<Record> cartItem  =  Db.find(sql,getStr("id"),cartId,productId);
+		for (Iterator<Record> iter = cartItem.iterator(); iter.hasNext();) {
+			Record tmp = (Record) iter.next();
+			result.add(CommonUtil.sortString(tmp.getStr("product_specifications")));
+		}
+		return result.size() == 0?"":result.get(0);
 	}
 	
 	// 收货地址

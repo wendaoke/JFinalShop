@@ -2,6 +2,7 @@ package com.jfinalshop.controller.admin;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -10,6 +11,8 @@ import org.apache.commons.lang.StringUtils;
 
 import com.jfinal.aop.Before;
 import com.jfinal.kit.StrKit;
+import com.jfinal.plugin.activerecord.Db;
+import com.jfinal.plugin.activerecord.IAtom;
 import com.jfinal.plugin.activerecord.tx.Tx;
 import com.jfinalshop.bean.SystemConfig.PointType;
 import com.jfinalshop.bean.SystemConfig.StoreFreezeTime;
@@ -828,5 +831,31 @@ public class OrderController extends BaseAdminController<Orders>{
 	// 获取所有物流公司
 	public List<DeliveryCorp> getAllDeliveryCorp() {
 		return DeliveryCorp.dao.getAll();
+	}
+	
+	public void deleteAll() {
+		boolean result = true;
+		ids = getParaValues("ids");
+		for (final String id : ids) {
+
+			result = Db.tx(new IAtom() {
+				public boolean run() throws SQLException {
+					int count = Db.update("delete FROM orderitem WHERE order_id = ?", id);
+					int count2 = Db.update("delete FROM orderlog WHERE order_id = ?", id);
+					int count3 = Db.update("delete FROM Orders  WHERE id = ?", id);
+					return count > 0 && count2 > 0 && count3 > 0 ;
+				}
+			});
+
+			if (!result) {
+				break;
+			}
+		}
+		if(result){
+			ajaxJsonSuccessMessage("batch delete successfully!");
+		}else{
+			ajaxJsonErrorMessage("batch delete error!");
+		}
+		
 	}
 }

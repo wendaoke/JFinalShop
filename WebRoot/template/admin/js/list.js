@@ -16,11 +16,11 @@ $().ready( function() {
      $allCheck.click(function(){
     	 var isChecked = $idsCheck.is(":checked"); 
     	 if (isChecked == false) {
- 			$idsCheck.prop('checked',true);
- 			$deleteButton.prop("disabled", false);
+ 			$idsCheck.attr('checked',true);
+ 			$deleteButton.attr("disabled", false);
  		} else {
- 			$idsCheck.prop('checked',false);
- 			$deleteButton.prop("disabled", true);
+ 			$idsCheck.attr('checked',false);
+ 			$deleteButton.attr("disabled", true);
  		}
      });  
 
@@ -28,9 +28,9 @@ $().ready( function() {
  	$idsCheck.click( function() {
  		var $idsChecked = $("[name='ids']:checked");
  		if ($idsChecked.size() > 0) {
- 			$deleteButton.prop("disabled", false);
+ 			$deleteButton.attr("disabled", false);
  		} else {
- 			$deleteButton.prop("disabled", true)
+ 			$deleteButton.attr("disabled", true)
  		}
  	});
  	
@@ -53,10 +53,10 @@ function deleteAll(url) {
 			dataType: "json",
 			async: false,
 			beforeSend: function(data) {
-				$deleteButton.prop("disabled", true)
+				$deleteButton.attr("disabled", true)
 			},
 			success: function(data) {
-				$deleteButton.prop("disabled", false)
+				$deleteButton.attr("disabled", false)
 				if (data.status == "success") {
 					$idsCheckedCheck.parent().parent().remove();
 				}

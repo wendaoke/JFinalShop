@@ -5,7 +5,7 @@ public class Server {
 	public static void main(String[] args) {
 		String webAppDir = Server.class.getResource("/").getPath()
 				.replace("/WEB-INF/classes/", "");
-		int port = 80;
+		int port = 8080;
 		String content = "/";
 		if (args != null && args.length > 0) {
 			try {

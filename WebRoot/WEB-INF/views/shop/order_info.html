@@ -289,6 +289,13 @@ $().ready( function() {
 								<a href="${base}${list.product.htmlFilePath}" target="_blank">
 									<img src="${base}${list.product.productImageList[0].thumbnailProductImagePath!systemConfig.defaultThumbnailProductImagePath}" /> ${list.name}
 								</a>
+								<% var specificationlst = "";
+								for(sv in list.specificationValueList!){
+								specificationlst = specificationlst + sv.specification.id+"_"+sv.id+",";
+								%>
+									${sv.specification.name}:${sv.name}
+									
+								<%}%>
 							</td>
 							<%if (loginMember.memberRank.preferentialScale != 100){%>
 								<td class="priceTd">

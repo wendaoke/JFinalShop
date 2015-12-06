@@ -180,6 +180,7 @@ public class HtmlService {
 	public void productContentBuildHtml(Product product) {
 		HtmlConfig htmlConfig = TemplateConfigUtil.getHtmlConfig(HtmlConfig.PRODUCT_CONTENT);
 		String productCategory_id = product.getStr("productCategory_id");
+		String productId = product.getStr("id");
 		Map<String, Object> data = getCommonData();
 		data.put("product", product);
 		data.put("pathList", ProductCategory.dao.getProductCategoryPathList(product));
@@ -187,6 +188,7 @@ public class HtmlService {
 		data.put("bestProductList", Product.dao.getBestProductList(productCategory_id, Product.MAX_BEST_PRODUCT_LIST_COUNT));
 		data.put("hotProductList", Product.dao.getHotProductList(productCategory_id, Product.MAX_HOT_PRODUCT_LIST_COUNT));
 		data.put("newProductList", Product.dao.getNewProductList(productCategory_id, Product.MAX_NEW_PRODUCT_LIST_COUNT));
+		data.put("specificationList", ProductService.service.getSpecificationList(productId));
 		String htmlFilePath = product.getStr("htmlFilePath");;
 		String templateFilePath = htmlConfig.getTemplateFilePath();
 		buildHtml(templateFilePath, htmlFilePath, data);

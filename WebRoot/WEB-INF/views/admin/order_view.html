@@ -224,7 +224,15 @@
 		    <%for(list in order.orderItemList){%>
 		        <tr>
 		            <td><a href="${base}${list.productHtmlFilePath}" target="_blank">${list.productSn}</a></td>
-		            <td><a href="${base}${list.productHtmlFilePath}" target="_blank">${list.productName}</a></td>
+		            <td><a href="${base}${list.productHtmlFilePath}" target="_blank">${list.productName}</a><br/>
+            			<% var specificationlst = "";
+						for(sv in list.specificationValueList!){
+						specificationlst = specificationlst + sv.specification.id+"_"+sv.id+",";
+						%>
+							${sv.specification.name}:${sv.name}
+							
+						<%}%>
+					</td>
 		            <td class="am-text-danger">${list.productPrice,priceUnitCurrencyFormat}</td>
 		            <td class="am-text-secondary am-text-center">${list.productQuantity}</td>
 		        </tr>	

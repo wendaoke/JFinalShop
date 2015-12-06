@@ -13,6 +13,9 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.geometry.Positions;
+
 import com.jfinalshop.bean.SystemConfig.WatermarkPosition;
 
 /**
@@ -32,22 +35,7 @@ public class ImageUtil {
 	 */
 	public static void zoom(BufferedImage srcBufferedImage, File destFile, int destHeight, int destWidth) {
 		try {
-			int imgWidth = destWidth;
-			int imgHeight = destHeight;
-			int srcWidth = srcBufferedImage.getWidth();
-			int srcHeight = srcBufferedImage.getHeight();
-			if (srcHeight >= srcWidth) {
-				imgWidth = (int) Math.round(((destHeight * 1.0 / srcHeight) * srcWidth));
-			} else {
-				imgHeight = (int) Math.round(((destWidth * 1.0 / srcWidth) * srcHeight));
-			}
-			BufferedImage destBufferedImage = new BufferedImage(destWidth, destHeight, BufferedImage.TYPE_INT_RGB);
-			Graphics2D graphics2D = destBufferedImage.createGraphics();
-			graphics2D.setBackground(Color.WHITE);
-			graphics2D.clearRect(0, 0, destWidth, destHeight);
-			graphics2D.drawImage(srcBufferedImage.getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH), (destWidth / 2) - (imgWidth / 2), (destHeight / 2) - (imgHeight / 2), null);
-			graphics2D.dispose();
-			ImageIO.write(destBufferedImage, "JPEG", destFile);
+			Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).outputFormat("JPEG") .toFile(destFile);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -66,41 +54,19 @@ public class ImageUtil {
 	 */
 	public static void imageWatermark(BufferedImage srcBufferedImage, File destFile, File watermarkFile, WatermarkPosition watermarkPosition, int alpha) {
 		try {
-			int srcWidth = srcBufferedImage.getWidth();
-			int srcHeight = srcBufferedImage.getHeight();
-			BufferedImage destBufferedImage = new BufferedImage(srcWidth, srcHeight, BufferedImage.TYPE_INT_RGB);
-			Graphics2D graphics2D = destBufferedImage.createGraphics();
-			graphics2D.setBackground(Color.WHITE);
-			graphics2D.clearRect(0, 0, srcWidth, srcHeight);
-			graphics2D.drawImage(srcBufferedImage.getScaledInstance(srcWidth, srcHeight, Image.SCALE_SMOOTH), 0, 0, null);
-
 			if (watermarkFile != null && watermarkFile.exists() && watermarkPosition != null && watermarkPosition != WatermarkPosition.no) {
-				BufferedImage watermarkBufferedImage = ImageIO.read(watermarkFile);
-				int watermarkImageWidth = watermarkBufferedImage.getWidth();
-				int watermarkImageHeight = watermarkBufferedImage.getHeight();
-				graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha / 100.0F));
-				int x = 0;
-				int y = 0;
 				if (watermarkPosition == WatermarkPosition.topLeft) {
-					x = 0;
-					y = 0;
+					Thumbnails.of(srcBufferedImage).scale(1f).watermark(Positions.TOP_LEFT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG").toFile(destFile) ;
 				} else if (watermarkPosition == WatermarkPosition.topRight) {
-					x = srcWidth - watermarkImageWidth;
-					y = 0;
+					Thumbnails.of(srcBufferedImage).scale(1f).watermark(Positions.TOP_RIGHT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG") .toFile(destFile);
 				} else if (watermarkPosition == WatermarkPosition.center) {
-					x = (srcWidth - watermarkImageWidth) / 2;
-					y = (srcHeight - watermarkImageHeight) / 2;
+					Thumbnails.of(srcBufferedImage).scale(1f).watermark(Positions.CENTER,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG").toFile(destFile) ;
 				} else if (watermarkPosition == WatermarkPosition.bottomLeft) {
-					x = 0;
-					y = srcHeight - watermarkImageHeight;
+					Thumbnails.of(srcBufferedImage).scale(1f).watermark(Positions.BOTTOM_LEFT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG") .toFile(destFile);
 				} else if (watermarkPosition == WatermarkPosition.bottomRight) {
-					x = srcWidth - watermarkImageWidth;
-					y = srcHeight - watermarkImageHeight;
+					Thumbnails.of(srcBufferedImage).scale(1f).watermark(Positions.BOTTOM_RIGHT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG") .toFile(destFile) ;
 				}
-				graphics2D.drawImage(watermarkBufferedImage, x, y, watermarkImageWidth, watermarkImageHeight, null);
 			}
-			graphics2D.dispose();
-			ImageIO.write(destBufferedImage, "JPEG", destFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -119,48 +85,21 @@ public class ImageUtil {
 	 */
 	public static void zoomAndWatermark(BufferedImage srcBufferedImage, File destFile, int destHeight, int destWidth, File watermarkFile, WatermarkPosition watermarkPosition, int alpha) {
 		try {
-			int imgWidth = destWidth;
-			int imgHeight = destHeight;
-			int srcWidth = srcBufferedImage.getWidth();
-			int srcHeight = srcBufferedImage.getHeight();
-			if (srcHeight >= srcWidth) {
-				imgWidth = (int) Math.round(((destHeight * 1.0 / srcHeight) * srcWidth));
-			} else {
-				imgHeight = (int) Math.round(((destWidth * 1.0 / srcWidth) * srcHeight));
-			}
-			
-			BufferedImage destBufferedImage = new BufferedImage(destWidth, destHeight, BufferedImage.TYPE_INT_RGB);
-			Graphics2D graphics2D = destBufferedImage.createGraphics();
-			graphics2D.setBackground(Color.WHITE);
-			graphics2D.clearRect(0, 0, destWidth, destHeight);
-			graphics2D.drawImage(srcBufferedImage.getScaledInstance(imgWidth, imgHeight, Image.SCALE_SMOOTH), (destWidth / 2) - (imgWidth / 2), (destHeight / 2) - (imgHeight / 2), null);
 			if (watermarkFile != null && watermarkFile.exists() && watermarkPosition != null && watermarkPosition != WatermarkPosition.no) {
-				BufferedImage watermarkBufferedImage = ImageIO.read(watermarkFile);
-				int watermarkImageWidth = watermarkBufferedImage.getWidth();
-				int watermarkImageHeight = watermarkBufferedImage.getHeight();
-				graphics2D.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_ATOP, alpha / 100.0F));
-				int x = 0;
-				int y = 0;
 				if (watermarkPosition == WatermarkPosition.topLeft) {
-					x = 0;
-					y = 0;
+					Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).watermark(Positions.TOP_LEFT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG").toFile(destFile) ;
 				} else if (watermarkPosition == WatermarkPosition.topRight) {
-					x = destWidth - watermarkImageWidth;
-					y = 0;
+					Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).watermark(Positions.TOP_RIGHT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG") .toFile(destFile);
 				} else if (watermarkPosition == WatermarkPosition.center) {
-					x = (destWidth - watermarkImageWidth) / 2;
-					y = (destHeight - watermarkImageHeight) / 2;
+					Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).watermark(Positions.CENTER,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG").toFile(destFile) ;
 				} else if (watermarkPosition == WatermarkPosition.bottomLeft) {
-					x = 0;
-					y = destHeight - watermarkImageHeight;
+					Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).watermark(Positions.BOTTOM_LEFT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG") .toFile(destFile);
 				} else if (watermarkPosition == WatermarkPosition.bottomRight) {
-					x = destWidth - watermarkImageWidth;
-					y = destHeight - watermarkImageHeight;
+					Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).watermark(Positions.BOTTOM_RIGHT,ImageIO.read(watermarkFile),alpha / 100.0F).outputFormat("JPEG") .toFile(destFile) ;
 				}
-				graphics2D.drawImage(watermarkBufferedImage, x, y, watermarkImageWidth, watermarkImageHeight, null);
+			}else{
+				Thumbnails.of(srcBufferedImage).size(destWidth, destHeight).outputFormat("JPEG") .toFile(destFile);
 			}
-			graphics2D.dispose();
-			ImageIO.write(destBufferedImage, "JPEG", destFile);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

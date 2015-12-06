@@ -9,11 +9,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.alibaba.fastjson.JSON;
 import com.jfinal.plugin.activerecord.Db;
 import com.jfinal.plugin.activerecord.Model;
+import com.jfinalshop.bean.AlipayConfig;
+import com.jfinalshop.bean.PaypalConfig;
 import com.jfinalshop.bean.TenpayConfig;
 import com.jfinalshop.bean.TenpayConfig.TenpayType;
 import com.jfinalshop.util.SystemConfigUtil;
@@ -30,7 +33,7 @@ public class PaymentConfig extends Model<PaymentConfig>{
 
 	// 支付配置类型（预存款、线下支付、财付通）
 	public enum PaymentConfigType {
-		deposit, offline, tenpay, alipay
+		deposit, offline, tenpay, alipay,paypal
 	};
 	
 	// 支付手续费类型（按比例收费、固定费用）
@@ -64,15 +67,16 @@ public class PaymentConfig extends Model<PaymentConfig>{
 		if (StringUtils.isEmpty(configObjectStore)) {
 			return null;
 		}
-		Object objectConfig = JSON.parseObject(configObjectStore, Object.class);
 		if (getPaymentConfigType() == PaymentConfigType.deposit) {
 			return null;
 		} else if (getPaymentConfigType() == PaymentConfigType.offline) {
 			return null;
 		} else if (getPaymentConfigType() == PaymentConfigType.tenpay) {
-			return objectConfig;
+			return JSON.parseObject(configObjectStore, TenpayConfig.class);
 		} else if (getPaymentConfigType() == PaymentConfigType.alipay) {
-			return objectConfig;
+			return JSON.parseObject(configObjectStore, AlipayConfig.class);
+		}else if (getPaymentConfigType() == PaymentConfigType.paypal) {
+			return JSON.parseObject(configObjectStore, PaypalConfig.class);
 		}
 		return null;
 	}
@@ -91,6 +95,8 @@ public class PaymentConfig extends Model<PaymentConfig>{
 		} else if (getPaymentConfigType() == PaymentConfigType.tenpay) {
 			set("configObjectStore", text);
 		} else if (getPaymentConfigType() == PaymentConfigType.alipay) {
+			set("configObjectStore", text);
+		}else if (getPaymentConfigType() == PaymentConfigType.paypal) {
 			set("configObjectStore", text);
 		}
 	}
@@ -113,6 +119,16 @@ public class PaymentConfig extends Model<PaymentConfig>{
 	public List<PaymentConfig> getNonDepositOfflinePaymentConfigList() {
 		String sql = "select * from PaymentConfig where paymentConfigType != ? and paymentConfigType != ? order by orderList asc";
 		return dao.find(sql,PaymentConfigType.valueOf(PaymentConfigType.deposit.name()).ordinal(),PaymentConfigType.valueOf(PaymentConfigType.offline.name()).ordinal());
+	}
+	
+	public PaymentConfig getPaypalPaymentConfig(){
+		String sql = "select * from PaymentConfig where paymentConfigType = ? ";
+		List<PaymentConfig> list = dao.find(sql,PaymentConfigType.valueOf(PaymentConfigType.paypal.name()).ordinal());
+		if(CollectionUtils.isNotEmpty(list)){
+			return list.get(0);
+		}else{
+			return null;
+		}
 	}
 	
 	/**

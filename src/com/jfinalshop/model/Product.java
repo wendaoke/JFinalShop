@@ -444,6 +444,30 @@ public class Product extends Model<Product>{
 	}
 	
 	/**
+	 * 设置商品规格
+	 * @param 
+	 */
+	public void setProductSpecification(String[] specifications) {
+		if (specifications == null || specifications.length == 0) {
+			return;
+		}
+		// 先删除已存的
+		Db.deleteById("product_specification", "products", getStr("id"));
+		ProductSpecification productSpecification = new ProductSpecification();
+		for (int i = 0;i<specifications.length;i++) {
+			String[] temp = specifications[i].split("_");
+			 if(temp.length < 2){
+				 continue ;
+			 }
+			productSpecification.set("id", CommonUtil.getUUID());
+			productSpecification.set("products", getStr("id"));
+			productSpecification.set("specifications", temp[0]);
+			productSpecification.set("values", temp[1]);
+			productSpecification.save();
+		}
+	}
+	
+	/**
 	 * 收藏夹
 	 * @return
 	 */

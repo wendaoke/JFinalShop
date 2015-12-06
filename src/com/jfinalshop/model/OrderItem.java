@@ -15,6 +15,7 @@ public class OrderItem extends Model<OrderItem>{
 	
 	public static final OrderItem dao = new OrderItem();
 	
+	
 	// 产品
 	public Product getProduct(){
 		return Product.dao.findById(getStr("product_id"));		
@@ -24,6 +25,10 @@ public class OrderItem extends Model<OrderItem>{
 	public List<Product> getProductItemList(){
 		String sql = "select * from product where id = ?";
 		return Product.dao.find(sql,getStr("product_id"));		
+	}
+	
+	public List<SpecificationValue> getSpecificationValueList() {
+		return SpecificationValue.dao.getSpecificationValuesByOrderItem(getStr("order_id"),  getStr("cartitem_id"),getStr("product_id"));
 	}
 	
 	// 订单
@@ -37,4 +42,6 @@ public class OrderItem extends Model<OrderItem>{
 		orderItem.set("createDate", new Date());
 		return orderItem.save();
 	}
+
+
 }

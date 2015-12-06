@@ -40,6 +40,7 @@ $().ready( function() {
 		$this = $(this);
 		var id = $this.metadata().id;
 		var quantity = $this.val();
+		var specificationlst =  $this.metadata().specificationlst;
 		
 		var x = $this.offset().left - 63;
 		var y = $this.offset().top + 25;
@@ -57,7 +58,7 @@ $().ready( function() {
 		}
 		$.ajax({
 			url: "${base}/shop/cartItem/ajaxEdit",
-			data: {"id": id, "quantity": quantity},
+			data: {"id": id, "quantity": quantity,"specificationlst":specificationlst},
 			dataType: "json",
 			async: false,
 			beforeSend: function() {
@@ -99,10 +100,11 @@ $().ready( function() {
 	$deleteCartItem.click( function() {
 		$this = $(this);
 		var id = $this.metadata().id;
+		var specificationlst =  $this.metadata().specificationlst;
 		if (confirm("您确定要移除此商品吗？") == true) {
 			$.ajax({
 				url: "${base}/shop/cartItem/ajaxDelete",
-				data: {"id": id},
+				data: {"id":id,"specificationlst":specificationlst},
 				dataType: "json",
 				async: false,
 				success: function(data) {
@@ -194,7 +196,14 @@ $().ready( function() {
 								<a href="${base}${list.product.htmlFilePath}" target="_blank">
 									<img src="${base}${list.product.productImageList[0].thumbnailProductImagePath!systemConfig.defaultThumbnailProductImagePath}" />
 									${list.name}
-								</a>
+								</a> 
+								<% var specificationlst = "";
+								for(sv in list.specificationValueList!){
+								specificationlst = specificationlst + sv.specification.id+"_"+sv.id+",";
+								%>
+									${sv.specification.name}:${sv.name}
+									
+								<%}%>
 							</td>
 							<%if (loginMember.memberRank.preferentialScale! != 100){%>
 								<td class="priceTd">
@@ -209,7 +218,7 @@ $().ready( function() {
 								</td>
 							<%}%>
 							<td>
-								<input type="text" name="quantity" class="formText quantity {id: '${list.product.id}'}" value="${list.quantity}">
+								<input type="text" name="quantity" class="formText quantity {id: '${list.product.id}',specificationlst:'${specificationlst}'}" value="${list.quantity}">
 								<%if (list.product.store != null && list.product.freezeStore + list.quantity > list.product.store){%>
 									<strong class="storeInfo red">[库存不足]</strong>
 								<%}%>
@@ -218,7 +227,7 @@ $().ready( function() {
 								<span class="subtotalPrice">${list.subtotalPrice,orderCurrencyFormat}</span>
 							</td>
 							<td>
-								<a class="deleteCartItem {id: '${list.product.id}'}" href="javascript: void(0);">删除</a>
+								<a class="deleteCartItem {id: '${list.product.id}',specificationlst:'${specificationlst}'}" href="javascript: void(0);">删除</a>
 							</td>
 						</tr>
 					<%}%>

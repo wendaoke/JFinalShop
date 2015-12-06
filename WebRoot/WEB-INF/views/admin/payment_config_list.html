@@ -75,7 +75,7 @@
 			</table>
 			<%if (pager.list.~size > 0){%>
 				<div class="pagerBar">
-					<input type="button" class="deleteButton" url="${base}/paymentConfig/delete" value="删 除" disabled hidefocus="true" />
+					<input type="button" class="deleteButton" id="deleteButton" onclick="deleteAll('${base}/paymentConfig/delete')"  value="删 除"  hidefocus="true" />
 					<% include("/admin/pager.html"){}%>
 				</div>
 			<%}else{%>

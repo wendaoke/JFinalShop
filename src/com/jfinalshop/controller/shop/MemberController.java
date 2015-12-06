@@ -27,6 +27,7 @@ import com.jfinalshop.bean.SystemConfig;
 import com.jfinalshop.interceptor.NavigationInterceptor;
 import com.jfinalshop.model.Agreement;
 import com.jfinalshop.model.CartItem;
+import com.jfinalshop.model.CartSpecification;
 import com.jfinalshop.model.Member;
 import com.jfinalshop.model.MemberRank;
 import com.jfinalshop.model.Product;
@@ -63,10 +64,10 @@ public class MemberController extends Controller{
 		String password = getPara("member.password","");
 		String captchaToken = getPara("captchaToken","");
 		
-		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
-			addActionError("验证码错误!!!");
-			return;
-		}
+//		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+//			addActionError("验证码错误!!!");
+//			return;
+//		}
 		
 		SystemConfig systemConfig = getSystemConfig();
 		Member loginMember = Member.dao.getMemberByUsername(username);
@@ -162,6 +163,23 @@ public class MemberController extends Controller{
 								cartItem.set("product_id",product.getStr("id"));
 								cartItem.set("quantity",cartItemCookie.getQ());
 								cartItem.save(cartItem);
+								
+								//添加商品规格
+								if(StringUtils.isNotBlank(cartItemCookie.getS())){
+									String[] specificationArray = cartItemCookie.getS().split(",");
+									for(int i= 0;i<specificationArray.length;i++){
+										String[] specification = specificationArray[i].split("_");
+										if(2 != specification.length){
+											ajaxJsonErrorMessage("添加购物车失败，商品规格有误!");
+										}
+										CartSpecification cs = new CartSpecification();
+										cs.set("carts", cartItem.getStr("id"));
+										cs.set("products", product.getStr("id"));
+										cs.set("specifications", specification[0]);
+										cs.set("specification_values", specification[1]);
+										cs.save(cs);
+									}
+								}
 							}
 						}
 					}
@@ -191,10 +209,10 @@ public class MemberController extends Controller{
 		String password = getPara("member.password","");
 		String captchaToken = getPara("captchaToken","");
 		
-		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
-			addActionError("验证码错误!");
-			return;
-		}
+//		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+//			addActionError("验证码错误!");
+//			return;
+//		}
 		
 		SystemConfig systemConfig = getSystemConfig();
 		Member loginMember = Member.dao.getMemberByUsername(username);
@@ -287,7 +305,24 @@ public class MemberController extends Controller{
 								cartItem.set("product_id",product.getStr("id"));
 								cartItem.set("quantity",cartItemCookie.getQ());
 								cartItem.save(cartItem);
-							}
+								
+								//添加商品规格
+								if(StringUtils.isNotBlank(cartItemCookie.getS())){
+									String[] specificationArray = cartItemCookie.getS().split(",");
+									for(int i= 0;i<specificationArray.length;i++){
+										String[] specification = specificationArray[i].split("_");
+										if(2 != specification.length){
+											ajaxJsonErrorMessage("添加购物车失败，商品规格有误!");
+										}
+										CartSpecification cs = new CartSpecification();
+										cs.set("carts", cartItem.getStr("id"));
+										cs.set("products", product.getStr("id"));
+										cs.set("specifications", specification[0]);
+										cs.set("specification_values", specification[1]);
+										cs.save(cs);
+									}
+								}
+											}
 						}
 					}
 				}
@@ -330,10 +365,10 @@ public class MemberController extends Controller{
 			return;
 		}
 		
-		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
-			ajaxJsonErrorMessage("验证码错误!");
-			return;
-		}
+//		if (!SubjectKit.doCaptcha("captcha", captchaToken)) {
+//			ajaxJsonErrorMessage("验证码错误!");
+//			return;
+//		}
 		
 		member.set("username", member.getStr("username").toLowerCase());
 		member.set("password", DigestUtils.md5Hex(member.getStr("password")));
@@ -383,6 +418,24 @@ public class MemberController extends Controller{
 								cartItem.set("product_id",product.getStr("id"));
 								cartItem.set("quantity",cartItemCookie.getQ());
 								cartItem.save(cartItem);
+								
+								
+								//添加商品规格
+								String[] specificationArray = cartItemCookie.getS().split(",");
+								for(int i= 0;i<specificationArray.length;i++){
+									String[] specification = specificationArray[i].split("_");
+									if(2 != specification.length){
+										ajaxJsonErrorMessage("添加购物车失败，商品规格有误!");
+									}
+									CartSpecification cs = new CartSpecification();
+									cs.set("carts", cartItem.getStr("id"));
+									cs.set("products", product.getStr("id"));
+									cs.set("specifications", specification[0]);
+									cs.set("specification_values", specification[1]);
+									cs.save(cs);
+								}		
+												
+								
 							}
 						}
 					}

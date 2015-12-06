@@ -478,7 +478,14 @@ $().ready( function() {
 						<td>
 							<a href="${base}${list.productHtmlFilePath}" target="_blank">
 								${list.productName}
-							</a>
+							</a><br/>
+								<% var specificationlst = "";
+								for(sv in list.specificationValueList!){
+								specificationlst = specificationlst + sv.specification.id+"_"+sv.id+",";
+								%>
+									${sv.specification.name}:${sv.name}
+									
+								<%}%>
 						</td>
 						<td>
 							${list.productPrice,priceUnitCurrencyFormat}

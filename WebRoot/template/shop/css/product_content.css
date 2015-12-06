@@ -211,6 +211,22 @@
 	color: #666666;
 }
 
+.productContent .bodyRight .productTop .productSepecification {
+	height: auto;
+	line-height: 25px;
+	clear: both;
+	padding-left: 6px;
+	border: 1px solid #ebebeb;
+}
+
+.productContent .bodyRight .productTop .productSepecification span {
+	width:20px;
+	height:20px;
+	line-height: 25px;
+	text-align:left;
+	color: #666666;
+}
+
 .productContent .bodyRight .productTop .productBuy {
 	height: 80px;
 	clear: both;

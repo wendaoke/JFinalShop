@@ -1,16 +1,21 @@
 package com.jfinalshop.controller.shop;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import com.jfinal.aop.Before;
 import com.jfinal.ext.route.ControllerBind;
 import com.jfinal.kit.StrKit;
 import com.jfinal.plugin.activerecord.tx.Tx;
+import com.jfinalshop.bean.PaypalConfig;
 import com.jfinalshop.bean.SystemConfig.StoreFreezeTime;
 import com.jfinalshop.bean.TenpayConfig;
 import com.jfinalshop.bean.TenpayConfig.TenpayType;
@@ -29,32 +34,38 @@ import com.jfinalshop.model.PaymentConfig;
 import com.jfinalshop.model.PaymentConfig.PaymentConfigType;
 import com.jfinalshop.model.Product;
 import com.jfinalshop.service.HtmlService;
+import com.jfinalshop.service.PaypalPaymentService;
 import com.jfinalshop.util.SerialNumberUtil;
+import com.paypal.api.payments.Links;
+import com.paypal.api.payments.PaymentExecution;
+import com.paypal.api.payments.util.ResultPrinter;
+import com.paypal.base.rest.PayPalRESTException;
 
 /**
  * 前台类 - 支付处理
  * 
  */
 @ControllerBind(controllerKey = "/shop/payment")
-public class PaymentController extends BaseShopController<Payment>{
+public class PaymentController extends BaseShopController<Payment> {
+	private static final Logger LOGGER = Logger.getLogger(PaymentController.class);
 
 	// 支付结果（成功、失败）
 	public enum PaymentResult {
 		success, failure
 	}
-	
+
 	private PaymentType paymentType;// 支付类型
 	private BigDecimal amountPayable;// 应付金额（不含支付费用）
 	private BigDecimal paymentFee;// 支付手续费
 	private PaymentResult paymentResult;// 支付结果
 	private PaymentConfig paymentConfig;// 支付方式
 	private Orders order;// 订单
-	
+
 	// 支付确认
 	public void confirm() {
-		amountPayable = new BigDecimal(getPara("amountPayable","0"));
+		amountPayable = new BigDecimal(getPara("amountPayable", "0"));
 		paymentType = PaymentType.valueOf(getPara("paymentType"));
-		String paymentConfigId = getPara("paymentConfig.id","");
+		String paymentConfigId = getPara("paymentConfig.id", "");
 		String orderId = getPara("order.id");
 		if (paymentType == PaymentType.recharge) {
 			if (amountPayable == null) {
@@ -73,9 +84,9 @@ public class PaymentController extends BaseShopController<Payment>{
 				addActionError("请选择支付方式！");
 				return;
 			}
-			if (StrKit.notBlank(paymentConfigId)){
+			if (StrKit.notBlank(paymentConfigId)) {
 				paymentConfig = PaymentConfig.dao.findById(paymentConfigId);
-			}			
+			}
 			paymentFee = paymentConfig.getPaymentFee(amountPayable);
 		} else {
 			if (StringUtils.isEmpty(orderId)) {
@@ -94,30 +105,30 @@ public class PaymentController extends BaseShopController<Payment>{
 		setAttr("paymentConfig", paymentConfig);
 		render("/shop/payment_confirm.html");
 	}
-	
+
 	// 支付入口
 	@Before(Tx.class)
 	public void gateway() {
-		String orderId = getPara("order.id","");
-		String paymentConfigId = getPara("paymentConfig.id","");
-		amountPayable = new BigDecimal(getPara("amountPayable","0"));
-		String pt = getPara("paymentType","");
-		
-		if (StrKit.notBlank(pt)){
+		String orderId = getPara("order.id", "");
+		String paymentConfigId = getPara("paymentConfig.id", "");
+		amountPayable = new BigDecimal(getPara("amountPayable", "0"));
+		String pt = getPara("paymentType", "");
+
+		if (StrKit.notBlank(pt)) {
 			paymentType = PaymentType.valueOf(pt);
-		}	
+		}
 		if (paymentType == PaymentType.recharge) {
 			if (amountPayable.compareTo(new BigDecimal("0")) <= 0) {
 				addActionError("充值金额必须大于0！");
-				return ;
+				return;
 			}
 			if (amountPayable.scale() > getSystemConfig().getOrderScale()) {
 				addActionError("充值金额小数位超出限制！");
-				return ;
+				return;
 			}
 			if (StringUtils.isEmpty(paymentConfigId)) {
 				addActionError("请选择支付方式！");
-				return ;
+				return;
 			}
 			paymentConfig = PaymentConfig.dao.findById(paymentConfigId);
 			if (paymentConfig.getPaymentConfigType() == PaymentConfigType.deposit || paymentConfig.getPaymentConfigType() == PaymentConfigType.offline) {
@@ -146,7 +157,7 @@ public class PaymentController extends BaseShopController<Payment>{
 				return;
 			}
 			if (getLoginMember().getBigDecimal("deposit").compareTo(order.getBigDecimal("totalAmount").subtract(order.getBigDecimal("paidAmount"))) < 0) {
-				paymentResult = PaymentResult.failure;				
+				paymentResult = PaymentResult.failure;
 				render("/shop/payment_deposit_result.html");
 			}
 			paymentFee = order.getBigDecimal("paymentFee");
@@ -197,74 +208,74 @@ public class PaymentController extends BaseShopController<Payment>{
 		Member loginMember = getLoginMember();
 		if (paymentConfig.getPaymentConfigType() == PaymentConfigType.deposit) {
 			if (totalAmount.compareTo(order.getBigDecimal("totalAmount").subtract(order.getBigDecimal("paidAmount"))) == 0) {
-				order.set("paymentStatus",Orders.PaymentStatus.paid.ordinal());
-				order.set("paidAmount",order.getBigDecimal("paidAmount").add(totalAmount));
+				order.set("paymentStatus", Orders.PaymentStatus.paid.ordinal());
+				order.set("paidAmount", order.getBigDecimal("paidAmount").add(totalAmount));
 			} else if (totalAmount.compareTo(order.getBigDecimal("totalAmount")) < 0) {
-				order.set("paymentStatus",Orders.PaymentStatus.partPayment.ordinal());
-				order.set("paidAmount",order.getBigDecimal("paidAmount").add(totalAmount));
+				order.set("paymentStatus", Orders.PaymentStatus.partPayment.ordinal());
+				order.set("paidAmount", order.getBigDecimal("paidAmount").add(totalAmount));
 			} else {
 				addActionError("交易金额错误！");
 				return;
 			}
 			order.update();
-			
-			loginMember.set("deposit",loginMember.getBigDecimal("deposit").subtract(totalAmount));
+
+			loginMember.set("deposit", loginMember.getBigDecimal("deposit").subtract(totalAmount));
 			loginMember.update();
-			
+
 			Deposit deposit = new Deposit();
-			deposit.set("depositType",DepositType.memberPayment.ordinal());
-			deposit.set("credit",new BigDecimal("0"));
-			deposit.set("debit",amountPayable);
-			deposit.set("balance",loginMember.getBigDecimal("deposit"));
-			deposit.set("member_id",loginMember.getStr("id"));
+			deposit.set("depositType", DepositType.memberPayment.ordinal());
+			deposit.set("credit", new BigDecimal("0"));
+			deposit.set("debit", amountPayable);
+			deposit.set("balance", loginMember.getBigDecimal("deposit"));
+			deposit.set("member_id", loginMember.getStr("id"));
 			deposit.save(deposit);
-			
+
 			Payment payment = new Payment();
-			payment.set("paymentType",paymentType.ordinal());
-			payment.set("PaymentConfigName",paymentConfig.getStr("name"));
-			payment.set("bankName",null);
-			payment.set("bankAccount",null);
-			payment.set("totalAmount",totalAmount);
-			payment.set("paymentFee",paymentFee);
-			payment.set("payer",getLoginMember().getStr("name"));
-			payment.set("operator",null);
-			payment.set("memo",null);
-			payment.set("paymentStatus",PaymentStatus.success.ordinal());
-			payment.set("paymentConfig_id",paymentConfigId);
-			payment.set("deposit_id",deposit.getStr("id"));
-			payment.set("order_id",order.getStr("id"));
+			payment.set("paymentType", paymentType.ordinal());
+			payment.set("PaymentConfigName", paymentConfig.getStr("name"));
+			payment.set("bankName", null);
+			payment.set("bankAccount", null);
+			payment.set("totalAmount", totalAmount);
+			payment.set("paymentFee", paymentFee);
+			payment.set("payer", getLoginMember().getStr("name"));
+			payment.set("operator", null);
+			payment.set("memo", null);
+			payment.set("paymentStatus", PaymentStatus.success.ordinal());
+			payment.set("paymentConfig_id", paymentConfigId);
+			payment.set("deposit_id", deposit.getStr("id"));
+			payment.set("order_id", order.getStr("id"));
 			payment.set("paymentSn", SerialNumberUtil.buildPaymentSn());
 			payment.save(payment);
-			
+
 			// 库存处理
 			if (getSystemConfig().getStoreFreezeTime() == StoreFreezeTime.payment) {
 				for (OrderItem orderItem : order.getOrderItemList()) {
 					Product product = orderItem.getProduct();
 					if (product.getInt("store") != null) {
-						product.set("freezeStore",product.getInt("freezeStore") + orderItem.getInt("productQuantity"));
+						product.set("freezeStore", product.getInt("freezeStore") + orderItem.getInt("productQuantity"));
 						if (product.getIsOutOfStock()) {
-							//Hibernate.initialize(orderItem.getProduct().getProductAttributeMapStore());
+							// Hibernate.initialize(orderItem.getProduct().getProductAttributeMapStore());
 							orderItem.getProduct().getProductAttributeMapStore();
 						}
 						product.update();
 						if (product.getIsOutOfStock()) {
-							//flushCache();
+							// flushCache();
 							HtmlService.service.productContentBuildHtml(product);
 						}
 					}
 				}
 			}
-			
+
 			// 订单日志
 			OrderLog orderLog = new OrderLog();
-			orderLog.set("orderLogType",OrderLogType.payment.ordinal());
-			orderLog.set("orderSn",order.getStr("orderSn"));
-			orderLog.set("operator",null);
-			orderLog.set("info","支付总金额：" + payment.getBigDecimal("TotalAmount"));
-			orderLog.set("order_id",order.getStr("id"));
+			orderLog.set("orderLogType", OrderLogType.payment.ordinal());
+			orderLog.set("orderSn", order.getStr("orderSn"));
+			orderLog.set("operator", null);
+			orderLog.set("info", "支付总金额：" + payment.getBigDecimal("TotalAmount"));
+			orderLog.set("order_id", order.getStr("id"));
 			orderLog.save(orderLog);
-			
-			paymentResult = PaymentResult.success;			
+
+			paymentResult = PaymentResult.success;
 			render("/shop/payment_deposit_result.html");
 		} else if (paymentConfig.getPaymentConfigType() == PaymentConfigType.offline) {
 			paymentResult = PaymentResult.success;
@@ -272,18 +283,18 @@ public class PaymentController extends BaseShopController<Payment>{
 		} else if (paymentConfig.getPaymentConfigType() == PaymentConfigType.tenpay) {
 			TenpayConfig tenpayConfig = (TenpayConfig) paymentConfig.getConfigObject();
 			Payment payment = new Payment();
-			payment.set("paymentType",paymentType.ordinal());
-			payment.set("paymentConfigName",paymentConfig.getStr("name"));
-			//payment.set("bankName",getText("PaymentConfigType.tenpay"));
-			payment.set("bankAccount",tenpayConfig.getBargainorId());
-			payment.set("totalAmount",totalAmount);
-			payment.set("paymentFee",paymentFee);
-			payment.set("payer",getLoginMember().getStr("username"));
-			payment.set("operator",null);
-			payment.set("memo",null);
-			payment.set("paymentStatus",PaymentStatus.ready.ordinal());
-			payment.set("paymentConfig_id",paymentConfigId);
-			payment.set("deposit_id",null);
+			payment.set("paymentType", paymentType.ordinal());
+			payment.set("paymentConfigName", paymentConfig.getStr("name"));
+			// payment.set("bankName",getText("PaymentConfigType.tenpay"));
+			payment.set("bankAccount", tenpayConfig.getBargainorId());
+			payment.set("totalAmount", totalAmount);
+			payment.set("paymentFee", paymentFee);
+			payment.set("payer", getLoginMember().getStr("username"));
+			payment.set("operator", null);
+			payment.set("memo", null);
+			payment.set("paymentStatus", PaymentStatus.ready.ordinal());
+			payment.set("paymentConfig_id", paymentConfigId);
+			payment.set("deposit_id", null);
 			payment.set("paymentSn", SerialNumberUtil.buildPaymentSn());
 			if (paymentType == PaymentType.recharge) {
 				payment.set("order_id", null);
@@ -291,55 +302,198 @@ public class PaymentController extends BaseShopController<Payment>{
 				payment.set("order_id", order.getStr("id"));
 			}
 			payment.save(payment);
-			
+
 			String ip = getRequest().getRemoteAddr();
 			if (tenpayConfig.getTenpayType() == TenpayType.direct) {
 				paymentUrl = PaymentConfig.dao.buildTenpayDirectPaymentUrl(paymentConfig, payment.getStr("paymentSn"), totalAmount, description, ip);
 			} else {
 				paymentUrl = PaymentConfig.dao.buildTenpayPartnerPaymentUrl(paymentConfig, payment.getStr("paymentSn"), totalAmount, description);
-			}		
+			}
 			redirect(paymentUrl);
+		} else if (paymentConfig.getPaymentConfigType() == PaymentConfigType.paypal) {
+			PaypalConfig paypalConfig = (PaypalConfig) paymentConfig.getConfigObject();
+			Payment payment = new Payment();
+			payment.set("paymentType", paymentType.ordinal());
+			payment.set("paymentConfigName", paymentConfig.getStr("name"));
+			// payment.set("bankName",getText("PaymentConfigType.tenpay"));
+			payment.set("bankAccount", paypalConfig.getBargainorId());
+			payment.set("totalAmount", totalAmount);
+			payment.set("paymentFee", paymentFee);
+			payment.set("payer", getLoginMember().getStr("username"));
+			payment.set("operator", null);
+			payment.set("memo", null);
+			payment.set("paymentStatus", PaymentStatus.ready.ordinal());
+			payment.set("paymentConfig_id", paymentConfigId);
+			payment.set("deposit_id", null);
+			payment.set("paymentSn", SerialNumberUtil.buildPaymentSn());
+			if (paymentType == PaymentType.recharge) {
+				payment.set("order_id", null);
+			} else {
+				payment.set("order_id", order.getStr("id"));
+			}
+			payment.save(payment);
+			com.paypal.api.payments.Payment createPayment = PaypalPaymentService.service.createPayment(getRequest(), getResponse(), paypalConfig, payment.getStr("id"),order);
+
+		
+
+			String redirectURL = "";
+			// ###Payment Approval Url
+			Iterator<Links> links = createPayment.getLinks().iterator();
+			while (links.hasNext()) {
+				Links link = links.next();
+				if (link.getRel().equalsIgnoreCase("approval_url")) {
+					// req.setAttribute("redirectURL", link.getHref());
+					redirectURL = link.getHref();
+				}
+			}
+			redirect(redirectURL);
 		}
-		/*try {
-			String urlString = "123efakiaHR0cDovL3d3dy5zaG9weHgubmV0L2NlcnRpZmljYXRlLmFjdGlvbj9zaG9wVXJsPQ";
-			BASE64Decoder bASE64Decoder = new BASE64Decoder();			
-			urlString = new String(bASE64Decoder.decodeBuffer(StringUtils.substring(urlString, 8) + "=="));
-			URL url = new URL(urlString + SystemConfigUtil.getSystemConfig().getShopUrl());
-			URLConnection urlConnection = url.openConnection();
-			HttpURLConnection httpConnection = (HttpURLConnection)urlConnection;
-			httpConnection.getResponseCode();
-		} catch (IOException e) {
-			
-		}*/
-		//return null;
+		/*
+		 * try { String urlString =
+		 * "123efakiaHR0cDovL3d3dy5zaG9weHgubmV0L2NlcnRpZmljYXRlLmFjdGlvbj9zaG9wVXJsPQ"
+		 * ; BASE64Decoder bASE64Decoder = new BASE64Decoder(); urlString = new
+		 * String(bASE64Decoder.decodeBuffer(StringUtils.substring(urlString, 8)
+		 * + "==")); URL url = new URL(urlString +
+		 * SystemConfigUtil.getSystemConfig().getShopUrl()); URLConnection
+		 * urlConnection = url.openConnection(); HttpURLConnection
+		 * httpConnection = (HttpURLConnection)urlConnection;
+		 * httpConnection.getResponseCode(); } catch (IOException e) {
+		 * 
+		 * }
+		 */
+		// return null;
 	}
-	
-	// 财付通支付请求结果处理
+
+	public void paypalReturn() {
+		HttpServletRequest request = getRequest();
+		LOGGER.error(request.getQueryString());
+		String guid = getPara("guid", "");
+		paymentConfig = PaymentConfig.dao.getPaypalPaymentConfig();
+		PaypalConfig paypalConfig = (PaypalConfig) paymentConfig.getConfigObject();
+		boolean result = PaypalPaymentService.service.executePayment(getRequest(), getResponse(), paypalConfig);
+		if (result) {
+			paymentResult = PaymentResult.success;
+			paypalReturnResult(guid);
+		} else {
+			paymentResult = PaymentResult.failure;
+		}
+
+		setAttr("paymentResult", paymentResult);
+		render("/shop/payment_paypal_result.html");
+	}
+
+	// 贝宝支付请求结果处理
+	public void paypalReturnResult(String paymentId) {
+
+		if (StringUtils.isBlank(paymentId)) {
+			addActionError("支付请求返回参数错误！");
+			return;
+		}
+		Payment payment  = Payment.dao.findById(paymentId);
+		paymentConfig = payment.getPaymentConfig();
+
+		Member loginMember = getLoginMember();
+
+		if (payment.getPaymentStatus() == PaymentStatus.success) {
+			addActionError("此交易已经完成支付，请勿重复提交！");
+			return;
+		}
+		if (payment.getPaymentStatus() != PaymentStatus.ready) {
+			addActionError("交易状态错误！");
+			return;
+		}
+		BigDecimal totalAmount = payment.getBigDecimal("totalAmount");// 支付总金额
+		amountPayable = payment.getBigDecimal("totalAmount").subtract(payment.getBigDecimal("paymentFee"));// 应付金额（不含支付费用）
+		paymentFee = payment.getBigDecimal("paymentFee");
+		Deposit deposit = null;
+		if (payment.getPaymentType() == PaymentType.recharge) {
+			loginMember.set("deposit", loginMember.getBigDecimal("deposit").add(amountPayable));
+			loginMember.update();
+
+			deposit = new Deposit();
+			deposit.set("depositType", DepositType.memberRecharge.ordinal());
+			deposit.set("credit", amountPayable);
+			deposit.set("debit", new BigDecimal("0"));
+			deposit.set("Balance", loginMember.getBigDecimal("deposit"));
+			deposit.set("member_id", loginMember.getStr("username"));
+			deposit.save(deposit);
+			payment.set("deposit_id", deposit.getStr("id"));
+		} else if (payment.getPaymentType() == PaymentType.online) {
+			order = payment.getOrder();
+			if (totalAmount.compareTo(order.getBigDecimal("totalAmount").subtract(order.getBigDecimal("paidAmount"))) == 0) {
+				order.set("paymentStatus", Orders.PaymentStatus.paid.ordinal());
+				order.set("paidAmount", order.getBigDecimal("paidAmount").add(totalAmount));
+			} else if (totalAmount.compareTo(order.getBigDecimal("totalAmount")) < 0) {
+				order.set("paymentStatus", Orders.PaymentStatus.partPayment.ordinal());
+				order.set("paidAmount", order.getBigDecimal("paidAmount").add(totalAmount));
+			} else {
+				addActionError("交易金额错误！");
+				return;
+			}
+			order.update();
+
+			// 库存处理
+			if (getSystemConfig().getStoreFreezeTime() == StoreFreezeTime.payment) {
+				for (OrderItem orderItem : order.getOrderItemList()) {
+					Product product = orderItem.getProduct();
+					if (product.getInt("store") != null) {
+						product.set("freezeStore", product.getInt("freezeStore") + orderItem.getInt("productQuantity"));
+						if (product.getIsOutOfStock()) {
+							// Hibernate.initialize(orderItem.getProduct().getProductAttributeMapStore());
+							orderItem.getProduct().getProductAttributeMapStore();
+						}
+						product.update();
+						if (product.getIsOutOfStock()) {
+							// flushCache();
+							HtmlService.service.productContentBuildHtml(product);
+						}
+					}
+				}
+			}
+
+			// 订单日志
+			OrderLog orderLog = new OrderLog();
+			orderLog.set("orderLogType", OrderLogType.payment.ordinal());
+			orderLog.set("orderSn", order.getStr("orderSn"));
+			orderLog.set("operator", null);
+			orderLog.set("info", "支付总金额：" + payment.getBigDecimal("totalAmount"));
+			
+			orderLog.set("order_id", order.getStr("id"));
+			OrderLog.dao.save(orderLog);
+		} else {
+			addActionError("交易类型错误！");
+			return;
+		}
+		payment.set("paymentStatus", PaymentStatus.success.ordinal());
+		payment.update();
+
+	}
+
 	public void tenpayReturn() {
 		// 获取参数
 		String shopName = "sh" + "op";
-		String cmdno = getPara("cmdno","");
-		String pay_result = getPara("pay_result","");
-		String pay_info = getPara("pay_info","");
-		String date = getPara("date","");
-		String bargainor_id = getPara("bargainor_id","");
-		String transaction_id = getPara("transaction_id","");
-		String sp_billno = getPara("sp_billno","");
-		String total_fee = getPara("total_fee","");
-		String fee_type = getPara("fee_type","");
-		String attach = getPara("attach","");
-		String version = getPara("version","");
-		String retcode = getPara("retcode","");
-		String status = getPara("status","");
-		String seller = getPara("seller","");
-		String trade_price = getPara("trade_price","");
-		String transport_fee = getPara("transport_fee","");
-		String buyer_id = getPara("buyer_id","");
-		String chnid = getPara("chnid","");
-		String cft_tid = getPara("cft_tid","");
-		String mch_vno = getPara("mch_vno","");
-		String sign = getPara("sign","");
-		
+		String cmdno = getPara("cmdno", "");
+		String pay_result = getPara("pay_result", "");
+		String pay_info = getPara("pay_info", "");
+		String date = getPara("date", "");
+		String bargainor_id = getPara("bargainor_id", "");
+		String transaction_id = getPara("transaction_id", "");
+		String sp_billno = getPara("sp_billno", "");
+		String total_fee = getPara("total_fee", "");
+		String fee_type = getPara("fee_type", "");
+		String attach = getPara("attach", "");
+		String version = getPara("version", "");
+		String retcode = getPara("retcode", "");
+		String status = getPara("status", "");
+		String seller = getPara("seller", "");
+		String trade_price = getPara("trade_price", "");
+		String transport_fee = getPara("transport_fee", "");
+		String buyer_id = getPara("buyer_id", "");
+		String chnid = getPara("chnid", "");
+		String cft_tid = getPara("cft_tid", "");
+		String mch_vno = getPara("mch_vno", "");
+		String sign = getPara("sign", "");
+
 		if (StringUtils.endsWithIgnoreCase(attach, shopName + ".n" + "et")) {
 			addActionError("在线支付参数错误！");
 			return;
@@ -391,7 +545,7 @@ public class PaymentController extends BaseShopController<Payment>{
 			addActionError("支付请求返回参数错误！");
 			return;
 		}
-		
+
 		Member loginMember = getLoginMember();
 		if (StringUtils.equals(pay_result, "0")) {
 			if (payment == null) {
@@ -415,72 +569,72 @@ public class PaymentController extends BaseShopController<Payment>{
 			paymentFee = payment.getBigDecimal("paymentFee");
 			Deposit deposit = null;
 			if (payment.getPaymentType() == PaymentType.recharge) {
-				loginMember.set("deposit",loginMember.getBigDecimal("deposit").add(amountPayable));
+				loginMember.set("deposit", loginMember.getBigDecimal("deposit").add(amountPayable));
 				loginMember.update();
-				
+
 				deposit = new Deposit();
-				deposit.set("depositType",DepositType.memberRecharge.ordinal());
-				deposit.set("credit",amountPayable);
-				deposit.set("debit",new BigDecimal("0"));
-				deposit.set("Balance",loginMember.getBigDecimal("deposit"));
-				deposit.set("member_id",loginMember.getStr("username"));
-				//deposit.setPayment(payment);
+				deposit.set("depositType", DepositType.memberRecharge.ordinal());
+				deposit.set("credit", amountPayable);
+				deposit.set("debit", new BigDecimal("0"));
+				deposit.set("Balance", loginMember.getBigDecimal("deposit"));
+				deposit.set("member_id", loginMember.getStr("username"));
+				// deposit.setPayment(payment);
 				deposit.save(deposit);
 			} else if (payment.getPaymentType() == PaymentType.online) {
 				order = payment.getOrder();
 				if (totalAmount.compareTo(order.getBigDecimal("totalAmount").subtract(order.getBigDecimal("paidAmount"))) == 0) {
-					order.set("paymentStatus",Orders.PaymentStatus.paid);
-					order.set("paidAmount",order.getBigDecimal("paidAmount").add(totalAmount));
+					order.set("paymentStatus", Orders.PaymentStatus.paid);
+					order.set("paidAmount", order.getBigDecimal("paidAmount").add(totalAmount));
 				} else if (totalAmount.compareTo(order.getBigDecimal("totalAmount")) < 0) {
-					order.set("paymentStatus",Orders.PaymentStatus.partPayment);
-					order.set("paidAmount",order.getBigDecimal("paidAmount").add(totalAmount));
+					order.set("paymentStatus", Orders.PaymentStatus.partPayment);
+					order.set("paidAmount", order.getBigDecimal("paidAmount").add(totalAmount));
 				} else {
 					addActionError("交易金额错误！");
 					return;
 				}
 				order.update();
-				
+
 				// 库存处理
 				if (getSystemConfig().getStoreFreezeTime() == StoreFreezeTime.payment) {
 					for (OrderItem orderItem : order.getOrderItemList()) {
 						Product product = orderItem.getProduct();
 						if (product.getInt("store") != null) {
-							product.set("freezeStore",product.getInt("freezeStore") + orderItem.getInt("productQuantity"));
+							product.set("freezeStore", product.getInt("freezeStore") + orderItem.getInt("productQuantity"));
 							if (product.getIsOutOfStock()) {
-								//Hibernate.initialize(orderItem.getProduct().getProductAttributeMapStore());
+								// Hibernate.initialize(orderItem.getProduct().getProductAttributeMapStore());
 								orderItem.getProduct().getProductAttributeMapStore();
 							}
 							product.update();
 							if (product.getIsOutOfStock()) {
-								//flushCache();
+								// flushCache();
 								HtmlService.service.productContentBuildHtml(product);
 							}
 						}
 					}
 				}
-				
+
 				// 订单日志
 				OrderLog orderLog = new OrderLog();
-				orderLog.set("orderLogType",OrderLogType.payment.ordinal());
-				orderLog.set("orderSn",order.getStr("orderSn"));
-				orderLog.set("operator",null);
-				orderLog.set("info","支付总金额：" + payment.getBigDecimal("totalAmount"));
-				payment.set("deposit_id",deposit.getStr("id"));
-				orderLog.set("order_id",order.getStr("id"));
+				orderLog.set("orderLogType", OrderLogType.payment.ordinal());
+				orderLog.set("orderSn", order.getStr("orderSn"));
+				orderLog.set("operator", null);
+				orderLog.set("info", "支付总金额：" + payment.getBigDecimal("totalAmount"));
+				payment.set("deposit_id", deposit.getStr("id"));
+				orderLog.set("order_id", order.getStr("id"));
 				orderLog.save();
 			} else {
 				addActionError("交易类型错误！");
 				return;
 			}
-			payment.set("paymentStatus",PaymentStatus.success.ordinal());
+			payment.set("paymentStatus", PaymentStatus.success.ordinal());
 			payment.update();
 			paymentResult = PaymentResult.success;
 		} else {
 			paymentResult = PaymentResult.failure;
 		}
-		//setResponseNoCache();
+		// setResponseNoCache();
 		setAttr("paymentResult", paymentResult);
 		render("/shop/payment_tenpay_result.html");
-		//return "tenpay_result";
+		// return "tenpay_result";
 	}
 }

@@ -96,6 +96,7 @@ $().ready(function() {
 		$productImageFiles.remove();
 		$productImageParameterTypes.remove();
 		
+		
 		$productImagePreview.html("暂无图片");
 		$productImagePreview.removeAttr("title");
 		if ($.browser.msie) {
@@ -103,6 +104,9 @@ $().ready(function() {
 				$productImagePreview[0].style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(sizingMethod = 'scale', src='')";
 			}
 		}
+		
+		$productImageLi.remove();
+		
 	});
 	
 	// 商品图片选择预览
@@ -157,7 +161,35 @@ $().ready(function() {
 		} 
 	});
 
+	if(!_.isEmpty($("#productId").val())){
+		var productId = $("#productId").val();
+		$.ajax({
+				url: "${base}/product/ajaxProductSpecification",
+				dataType: "json",
+				data:{productId:productId},
+				async: false,
+				success: function(json) {
+			    $.each(json, function(i) {
+			    	 $("#"+json[i]["specifications"]+"_"+json[i]["values"]).attr("checked",'true'); 
+			    })
+		    }
+		}
+	   );
+	}
+	
 })
+function check(){
+	var $productImageIds = $.find("input[name='productImages']");
+	console.log($productImageIds);
+}
+
+function unique(arr,removeAll){
+    arr.sort(function(a,b){return a-b});//先排序
+    var s=arr.join(',')+',';
+    arr= s.replace(/(\d+,)\1+/g,removeAll?'':'$1').replace(/,$/,'').split(',');
+    for(var i=0;i<arr.length;i++)arr[i]=parseInt(arr[i],10);//重新转为数字
+    return arr
+}
 </script>
 <%
 var isAdd = false;
@@ -174,8 +206,8 @@ if(isEmpty(product.id)){
 			<h1><span class="icon">&nbsp;</span><%if(isAdd){%>添加商品<%}else{%>编辑商品<%}%></h1>
 		</div>
 		<div class="blank"></div>
-		<form id="inputForm" class="validate" action="<%if (isAdd){%>${base}/product/save<%}else{%>${base}/product/update<%}%>" enctype="multipart/form-data" method="post">
-			<input type="hidden" name="product.id" value="${product.id!}" />
+		<form id="inputForm" class="validate" action="<%if (isAdd){%>${base}/product/save<%}else{%>${base}/product/update<%}%>" enctype="multipart/form-data" method="post" onsubmit="check();">
+			<input type="hidden" name="product.id" id="productId" value="${product.id!}" />
 			<ul class="tab">
 				<li>
 					<input type="button" value="基本信息" hidefocus="true" />
@@ -186,6 +218,9 @@ if(isEmpty(product.id)){
 				<li>
 					<input type="button" value="商品属性" hidefocus="true" />
 				</li>
+				<li>
+					<input type="button" value="商品规格" hidefocus="true" />
+				</li>				
 			</ul>
 			<table class="inputTable tabContent">
 				<tr>
@@ -373,7 +408,7 @@ if(isEmpty(product.id)){
 											</div>
 											<a class="productImageUploadButton" href="javascript: void(0);">
 												<%if (systemConfig.allowedUploadImageExtension != ""){%>
-													<input type="file" name="productImages1" hidefocus="true" />
+													<input type="file" name="productImages" hidefocus="true" />
 													<div>上传新图片</div>
 												<%}else{%>
 													<div>不允许上传</div>
@@ -481,7 +516,53 @@ if(isEmpty(product.id)){
 					</tr>
 				<%}%>
 			</table>
-			
+			<table class="inputTable tabContent">
+				<%for(list in allSpecification!){%>
+					<tr class="productSpecificationTr">
+						<th>
+							${list.name}[${list.memo}]:
+						</th>
+						<td>
+						<%for(vallist in list.specificationValueList!){%>
+								<input type="checkbox" value="${list.id}_${vallist.id}" id="${list.id}_${vallist.id}" name="specification" class="productSpecificationCheckBox"> ${vallist.name}
+						<%}%>
+						</td>
+					</tr>
+				<%}%>
+				<!-- 
+				<tr id="productSpecificationTr">
+				<td colspan="2">
+					         <table class="am-table am-table-striped am-table-hover table-main" style="padding:0px;margin:0px;" >
+					           <thead id="productSpecificationTableThead">
+					             <tr>
+					               <th class="table-check">
+					            <%for(slist in allProductSpecification!){%>
+								  <th>slist</th>
+						        <%}%>
+					               <th>市场售价</th>
+					               <th>本店售价</th>
+					               <th>库存</th>
+					               <th>是否默认</th>
+					             </tr>
+					         </thead>
+					         <tbody id="productSpecificationTableTbody">
+					         <%for(list in allSpecificationValue!){%>
+					         	 <tr>
+					            <%for(vlist in list.valuelst!){%>
+								  <td>valuelst</td>
+						        <%}%>
+									<td>${list.marketPrice}</td>
+									<td>${list.price}</td>
+									<td>${list.store}</td>
+									<td>${list.isDefault}</td>
+					           </tr>
+					         <%}%> 
+					       </tbody>
+					       </table>
+				</td>
+				</tr>
+				 -->
+			</table>			
 			<div class="buttonArea">
 				<input type="submit" class="formButton" value="确  定" hidefocus="true" />&nbsp;&nbsp;&nbsp;&nbsp;
 				<input type="button" class="formButton" onclick="window.history.back(); return false;" value="返  回" hidefocus="true" />

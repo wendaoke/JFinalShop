@@ -15,7 +15,7 @@ public class I18n implements Function {
 		try {
 			return com.jfinal.i18n.I18n.use(req.getLocale().toString()).get((String) obj[0]);
 		} catch (NullPointerException e) {
-			return com.jfinal.i18n.I18n.use(req.getLocale().toString()).get((String) obj[0]);
+			return com.jfinal.i18n.I18n.use("zh_CN").get((String) obj[0]);
 		}
 	}
 

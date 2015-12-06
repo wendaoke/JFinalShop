@@ -94,7 +94,10 @@ $().ready( function() {
 	$addCartItem.click( function() {
 		var $this = $(this);
 		var id = $this.metadata().id;
-		
+		var specificationlst ="";
+		$('input[class="specification"]:checked').each(function(){
+			specificationlst = specificationlst + this.value +",";
+		});
 		var x = $this.offset().left - 50;
 		var y = $this.offset().top + $this.height() + 6;
 		$addCartItemTip.css({"left" :x, "top" :y});
@@ -113,7 +116,7 @@ $().ready( function() {
 		}
 		$.ajax({
 			url: JFinalshop.base + "/shop/cartItem/ajaxAdd",
-			data: {"id": id, "quantity": quantity},
+			data: {"id": id, "quantity": quantity,"specificationlst":specificationlst},
 			dataType: "json",
 			beforeSend: function() {
 				$this.attr("disabled", true);

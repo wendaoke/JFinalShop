@@ -17,6 +17,8 @@ $().ready( function() {
 
 	var $alipayConfigTr = $(".alipayConfigTr");
 	var $alipayInput = $(".alipayConfigTr :input");
+	var $paypalConfigTr = $(".paypalConfigTr");
+	var $paypalInput = $(".paypalConfigTr :input");
 	// 根据支付类型显示/隐藏输入项
 	$paymentConfigTypeSelect.change( function() {
 		var $this = $(this);
@@ -24,15 +26,24 @@ $().ready( function() {
 			$tenpayInput.removeClass("ignoreValidate");
 			$tenpayConfigTr.show();
 			$alipayConfigTr.hide();
+			$paypalConfigTr.hide();
 		} else if($this.val() == "alipay") {
 			$alipayInput.removeClass("ignoreValidate");
 			$alipayConfigTr.show();
 			$tenpayConfigTr.hide();
+			$paypalConfigTr.hide();
+		}  else if($this.val() == "paypal") {
+			$paypalConfigTr.removeClass("ignoreValidate");
+			$paypalConfigTr.show();
+			$tenpayConfigTr.hide();
+			$alipayConfigTr.hide();
 		} else {
 			$tenpayInput.addClass("ignoreValidate");
 			$tenpayConfigTr.hide();
 			$alipayInput.addClass("ignoreValidate");
 			$alipayConfigTr.hide();
+			$paypalInput.addClass("ignoreValidate");
+			$paypalConfigTr.hide();
 		}
 	});
 
@@ -172,6 +183,44 @@ if(isEmpty(paymentConfig.id)){
 					</td>
 				</tr>
 				<!-- 支付宝end; -->
+				<!-- 贝宝begin; -->
+				<tr class="paypalConfigTr<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> hidden<%}%>">
+					<th>
+						贝宝访问网址:
+					</th>
+					<td>
+						<input type="text" name="paypalConfig.accessSite" class="formText<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> ignoreValidate<%}%> {required: true}'" value="${paypalConfig.accessSite!}" />
+						<label class="requireField">*</label>
+					</td>
+				</tr>
+				<tr class="paypalConfigTr<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> hidden<%}%>">
+					<th>
+						API 用户名:
+					</th>
+					<td>
+						<input type="text" name="paypalConfig.bargainorId" class="formText<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> ignoreValidate<%}%> {required: true}'" value="${paypalConfig.bargainorId!}" />
+						<label class="requireField">*</label>
+					</td>
+				</tr>				
+				<tr class="paypalConfigTr<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> hidden<%}%>">
+					<th>
+						API密钥:
+					</th>
+					<td>
+						<input type="text" name="paypalConfig.key" class="formText<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> ignoreValidate<%}%> {required: true}'" value="${paypalConfig.key!}" />
+						<label class="requireField">*</label>
+					</td>
+				</tr>
+				<tr class="paypalConfigTr<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> hidden<%}%>">
+					<th>
+						签名:
+					</th>
+					<td>
+						<input type="text" name="paypalConfig.sign" class="formText<%if (isAdd || paymentConfig.paymentConfigType != "paypal"){%> ignoreValidate<%}%> {required: true}'" value="${paypalConfig.sign!}" />
+						<label class="requireField">*</label>
+					</td>
+				</tr>				
+				<!-- 贝宝end; -->
 				<tr>
 					<th>
 						排序:

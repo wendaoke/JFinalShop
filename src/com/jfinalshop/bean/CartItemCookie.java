@@ -13,7 +13,15 @@ public class CartItemCookie {
 	
 	private String i;// 商品ID
 	private Integer q;// 商品购买数量
-	
+	private String s;
+	public String getS() {
+		return s;
+	}
+
+	public void setS(String s) {
+		this.s = s;
+	}
+
 	public String getI() {
 		return i;
 	}

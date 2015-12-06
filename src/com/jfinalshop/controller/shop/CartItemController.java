@@ -23,8 +23,10 @@ import com.jfinalshop.bean.CartItemCookie;
 import com.jfinalshop.bean.SystemConfig.PointType;
 import com.jfinalshop.interceptor.NavigationInterceptor;
 import com.jfinalshop.model.CartItem;
+import com.jfinalshop.model.CartSpecification;
 import com.jfinalshop.model.Member;
 import com.jfinalshop.model.Product;
+import com.jfinalshop.model.SpecificationValue;
 import com.jfinalshop.util.CommonUtil;
 import com.jfinalshop.util.SystemConfigUtil;
 
@@ -41,6 +43,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 	private Integer totalQuantity;// 商品总数
 	private Integer totalPoint;// 总积分
 	private BigDecimal totalPrice;// 总计商品价格
+	private String specificationlst;//商品规格
 	private List<CartItem> cartItemList = new ArrayList<CartItem>();
 	
 	// 购物车项列表
@@ -68,6 +71,9 @@ public class CartItemController extends BaseShopController<CartItem>{
 									CartItem cartItem = new CartItem();
 									cartItem.set("product_id",product.getStr("id"));
 									cartItem.set("quantity",cartItemCookie.getQ());
+									if(StringUtils.isNotBlank(cartItemCookie.getS())){
+										cartItem.setSpecificationValueList(SpecificationValue.dao.getSpecificationValueList(cartItemCookie.getS().split(",")));
+									}
 									cartItemList.add(cartItem);
 								}
 							}
@@ -84,6 +90,8 @@ public class CartItemController extends BaseShopController<CartItem>{
 						totalPoint = cartItem.getProduct().getInt("point") * cartItem.getInt("quantity") + totalPoint;
 					}
 					totalPrice = cartItem.getProduct().getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(cartItem.getInt("quantity").toString())).add(totalPrice);
+					
+					cartItem.setSpecificationValueList(SpecificationValue.dao.getSpecificationValuesByCartItem(cartItem.getStr("id")));
 				}
 			}
 		}
@@ -101,7 +109,8 @@ public class CartItemController extends BaseShopController<CartItem>{
 	// 添加购物车项
 	public void ajaxAdd() {
 		String id = getPara("id","");
-		quantity = getParaToInt("quantity",0);		
+		quantity = getParaToInt("quantity",0);
+		specificationlst = CommonUtil.sortString(getPara("specificationlst",""));
 		if(StrKit.isBlank(id)){
 			addActionError("产品ID为空!");
 			return;
@@ -129,7 +138,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 							
 							for (CartItemCookie previousCartItemCookie : previousCartItemCookieList) {
 								Product cartItemCookieProduct = Product.dao.findById(previousCartItemCookie.getI());
-								if (StringUtils.equals(previousCartItemCookie.getI(), id)) {
+								if (StringUtils.equals(previousCartItemCookie.getI(), id)&&(StringUtils.equals(previousCartItemCookie.getS(),specificationlst))) {
 									isExist = true;
 									previousCartItemCookie.setQ(previousCartItemCookie.getQ() + quantity);
 									if (product.getInt("store") != null && (product.getInt("freezeStore") + previousCartItemCookie.getQ()) > product.getInt("store")) {
@@ -148,6 +157,8 @@ public class CartItemController extends BaseShopController<CartItem>{
 				CartItemCookie cartItemCookie = new CartItemCookie();
 				cartItemCookie.setI(id);
 				cartItemCookie.setQ(quantity);
+				//添加商品规格
+				cartItemCookie.setS(specificationlst);
 				cartItemCookieList.add(cartItemCookie);
 				totalQuantity += quantity;
 				totalPrice =  product.getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(quantity.toString())).add(totalPrice);
@@ -171,9 +182,11 @@ public class CartItemController extends BaseShopController<CartItem>{
 		} else {
 			boolean isExist = false;
 			List<CartItem> previousCartItemList = loginMember.getCartItemList();
+			
 			if (previousCartItemList != null) {
 				for (CartItem previousCartItem : previousCartItemList) {
-					if (StringUtils.equals(previousCartItem.getProduct().getStr("id"), id)) {
+					String previousCartSpecificationList = loginMember.getCartSpecification(previousCartItem.getStr("id"),id);
+					if (StringUtils.equals(previousCartItem.getProduct().getStr("id"), id)&&(StringUtils.equals(previousCartSpecificationList,specificationlst))) {
 						isExist = true;
 						previousCartItem.set("quantity",previousCartItem.getInt("quantity") + quantity);
 						if (product.getInt("store") != null && (product.getInt("freezeStore") + previousCartItem.getInt("quantity")) > product.getInt("store")) {
@@ -196,6 +209,22 @@ public class CartItemController extends BaseShopController<CartItem>{
 					ajaxJsonErrorMessage("添加购物车失败，商品库存不足!");
 				}
 				cartItem.save();
+				//添加商品规格
+				if(StringUtils.isNotBlank(specificationlst)){
+					String[] specificationArray = specificationlst.split(",");
+					for(int i= 0;i<specificationArray.length;i++){
+						String[] specification = specificationArray[i].split("_");
+						if(2 != specification.length){
+							ajaxJsonErrorMessage("添加购物车失败，商品规格有误!");
+						}
+						CartSpecification cs = new CartSpecification();
+						cs.set("carts", cartItem.getStr("id"));
+						cs.set("products", product.getStr("id"));
+						cs.set("specifications", specification[0]);
+						cs.set("specification_values", specification[1]);
+						cs.save(cs);
+					}
+				}
 				totalQuantity += quantity;
 				totalPrice =  product.getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(quantity.toString())).add(totalPrice);
 			}
@@ -214,7 +243,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 		
 	// 购物车项列表
 	public void ajaxList() {
-		List<Map<String, String>> jsonList = new ArrayList<Map<String, String>>();
+		List<Map<String, Object>> jsonList = new ArrayList<Map<String, Object>>();
 		Member loginMember = getLoginMember();
 		totalQuantity = 0;
 		totalPrice = new BigDecimal("0");
@@ -234,11 +263,14 @@ public class CartItemController extends BaseShopController<CartItem>{
 									totalPrice = product.getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(cartItemCookie.getQ().toString())).add(totalPrice);
 									DecimalFormat decimalFormat = new DecimalFormat(getPriceCurrencyFormat());
 									String priceString = decimalFormat.format(product.getPreferentialPrice(getLoginMember()));
-									Map<String, String> jsonMap = new HashMap<String, String>();
+									Map<String, Object> jsonMap = new HashMap<String, Object>();
 									jsonMap.put("name", product.getStr("Name"));
 									jsonMap.put("price", priceString);
 									jsonMap.put("quantity", cartItemCookie.getQ().toString());
 									jsonMap.put("htmlFilePath", product.getStr("htmlFilePath"));
+									if(StringUtils.isNotBlank(cartItemCookie.getS())){
+										jsonMap.put("specificationlst", SpecificationValue.dao.getSpecificationValueList(cartItemCookie.getS().split(",")));
+									}
 									jsonList.add(jsonMap);
 								}
 							}
@@ -255,11 +287,12 @@ public class CartItemController extends BaseShopController<CartItem>{
 					totalPrice = product.getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(cartItem.getInt("quantity").toString())).add(totalPrice);
 					DecimalFormat decimalFormat = new DecimalFormat(getPriceCurrencyFormat());
 					String priceString = decimalFormat.format(cartItem.getProduct().getPreferentialPrice(getLoginMember()));
-					Map<String, String> jsonMap = new HashMap<String, String>();
+					Map<String, Object> jsonMap = new HashMap<String, Object>();
 					jsonMap.put("name", product.getStr("name"));
 					jsonMap.put("price", priceString);
 					jsonMap.put("quantity", cartItem.getInt("quantity").toString());
 					jsonMap.put("htmlFilePath", cartItem.getProduct().getStr("htmlFilePath"));
+					jsonMap.put("specificationlst", cartItem.getSpecificationValueList());
 					jsonList.add(jsonMap);
 				}
 			}
@@ -267,7 +300,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 		totalPrice = SystemConfigUtil.getOrderScaleBigDecimal(totalPrice);
 		DecimalFormat decimalFormat = new DecimalFormat(getOrderUnitCurrencyFormat());
 		String totalPriceString = decimalFormat.format(totalPrice);
-		Map<String, String> jsonMap = new HashMap<String, String>();
+		Map<String, Object> jsonMap = new HashMap<String, Object>();
 		jsonMap.put("totalQuantity", totalQuantity.toString());
 		jsonMap.put("totalPrice", totalPriceString);
 		jsonList.add(0, jsonMap);
@@ -278,6 +311,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 	public void ajaxEdit() {
 		quantity = getParaToInt("quantity",0);
 		String id = getPara("id");
+		specificationlst = CommonUtil.sortString(getPara("specificationlst",""));
 		if (quantity == null || quantity < 1) {
 			quantity = 1;
 		}
@@ -298,7 +332,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 							while (iterator.hasNext()) {
 								CartItemCookie cartItemCookie = iterator.next();
 								Product product = Product.dao.findById(cartItemCookie.getI());
-								if (StringUtils.equals(id, cartItemCookie.getI())) {
+								if (StringUtils.equals(id, cartItemCookie.getI())&&(StringUtils.equals(cartItemCookie.getS(), specificationlst))) {
 									cartItemCookie.setQ(quantity);
 									subtotalPrice = product.getPreferentialPrice(getLoginMember()).multiply(new BigDecimal(quantity));
 									if (product.getInt("store") != null && (product.getInt("freezeStore") + cartItemCookie.getQ()) > product.getInt("store")) {
@@ -325,7 +359,8 @@ public class CartItemController extends BaseShopController<CartItem>{
 			if (cartItemList != null) {
 				for (CartItem cartItem : cartItemList) {
 					Product product = cartItem.getProduct();
-					if (StringUtils.equals(id, cartItem.getProduct().getStr("id"))) {
+					String previousCartSpecificationList = loginMember.getCartSpecification(cartItem.getStr("id"),id);
+					if (StringUtils.equals(id, cartItem.getProduct().getStr("id"))&&(StringUtils.equals(previousCartSpecificationList,specificationlst))) {
 						cartItem.set("quantity",quantity);
 						if (product.getInt("store") != null && (product.getInt("freezeStore") + cartItem.getInt("quantity")) > product.getInt("store")) {
 							ajaxJsonErrorMessage("商品库存不足！");
@@ -361,6 +396,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 	// 删除购物车项
 	public void ajaxDelete() {
 		id = getPara("id","");
+		specificationlst = CommonUtil.sortString(getPara("specificationlst",""));
 		Member loginMember = getLoginMember();
 		totalQuantity = 0;
 		totalPoint = 0;
@@ -376,7 +412,7 @@ public class CartItemController extends BaseShopController<CartItem>{
 							Iterator<CartItemCookie> iterator = cartItemCookieList.iterator();
 							while (iterator.hasNext()) {
 								CartItemCookie cartItemCookie = iterator.next();
-								if (StringUtils.equals(cartItemCookie.getI(), id)) {
+								if ((StringUtils.equals(cartItemCookie.getI(), id)&&(StringUtils.equals(cartItemCookie.getS(), specificationlst)))) {
 									iterator.remove();
 								} else {
 									Product product = Product.dao.findById(cartItemCookie.getI());
@@ -401,7 +437,8 @@ public class CartItemController extends BaseShopController<CartItem>{
 			List<CartItem> cartItemList = loginMember.getCartItemList();
 			if (cartItemList != null) {
 				for (CartItem cartItem : cartItemList) {
-					if (StringUtils.equals(cartItem.getProduct().getStr("id"), id)) {
+					String previousCartSpecificationList = loginMember.getCartSpecification(cartItem.getStr("id"),id);
+					if (StringUtils.equals(cartItem.getProduct().getStr("id"), id)&&(StringUtils.equals(previousCartSpecificationList,specificationlst))) {
 						cartItem.delete();
 					} else {
 						Product product = cartItem.getProduct();
