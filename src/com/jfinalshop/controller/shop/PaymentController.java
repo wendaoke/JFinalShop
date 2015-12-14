@@ -366,7 +366,7 @@ public class PaymentController extends BaseShopController<Payment> {
 
 	public void paypalReturn() {
 		HttpServletRequest request = getRequest();
-		LOGGER.error(request.getQueryString());
+		LOGGER.info(request.getQueryString());
 		String guid = getPara("guid", "");
 		paymentConfig = PaymentConfig.dao.getPaypalPaymentConfig();
 		PaypalConfig paypalConfig = (PaypalConfig) paymentConfig.getConfigObject();
@@ -379,6 +379,8 @@ public class PaymentController extends BaseShopController<Payment> {
 		}
 
 		setAttr("paymentResult", paymentResult);
+		setAttr("amountPayable", amountPayable);
+		setAttr("paymentFee", paymentFee);
 		render("/shop/payment_paypal_result.html");
 	}
 
