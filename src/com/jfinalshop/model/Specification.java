@@ -25,18 +25,22 @@ public class Specification extends Model<Specification> {
 
 	// 若新修改的值与原来值相等则直接返回true
 	public boolean isUnique(String name, String memo) {
-		return dao.findFirst("select name from specification where name=? and memo =? limit 1", name, memo) == null;
+		return dao.findFirst("select name from specification where name=? and memo =?  limit 1", name, memo) == null;
+	}
+	
+	public boolean isUpdateUnique(String name, String memo, String category , int orders) {
+		return dao.findFirst("select name from specification where name=? and memo =? and category=? and orders = ? limit 1", name, memo,category,orders) == null;
 	}
 
 	// 获取所有规格
 	public List<Specification> getAll() {
-		return dao.find("select * from specification order by createDate desc");
+		return dao.find("select * from specification order by orders, createDate desc");
 	}
 
 	// 根据名称查找规格
 	public Page<Specification> findByPager(String name) {
 		String select = "select * ";
-		String sqlExceptSelect = " from specification where name = ? order by createDate desc ";
+		String sqlExceptSelect = " from specification where name = ? order by orders, createDate desc ";
 
 		Page<Specification> pager = dao.paginate(1, 100, select, sqlExceptSelect, name);
 		return pager;

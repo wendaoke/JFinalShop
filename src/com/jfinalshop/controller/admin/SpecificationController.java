@@ -76,7 +76,7 @@ public class SpecificationController extends BaseAdminController<Specification>{
 	@Before(SpecificationValidator.class)
 	public void update() {
 		specification = getModel(Specification.class);
-		boolean isExist = Specification.dao.isUnique(specification.getStr("name"), specification.getStr("memo"));
+		boolean isExist = Specification.dao.isUpdateUnique(specification.getStr("name"), specification.getStr("memo"),specification.getStr("category"),specification.getInt("orders"));
 		if (!isExist) {
 			addActionError("商品规格名称已存在!");
 			return;
